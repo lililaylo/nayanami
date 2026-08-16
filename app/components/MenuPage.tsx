@@ -940,7 +940,7 @@ export function MenuPage() {
                   <img
                     src="/qr.jpg"
                     alt="InstaPay QR"
-                    style={{ width: "160px", height: "160px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 0.75rem", display: "block" }}
+                    style={{ width: "100%", maxWidth: "280px", height: "auto", borderRadius: "0.75rem", margin: "0 auto 0.75rem", display: "block" }}
                   />
                   <p style={{ fontSize: "0.75rem", color: muted, margin: 0 }}>
                     Scan to pay before your order is confirmed
