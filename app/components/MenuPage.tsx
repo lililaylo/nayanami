@@ -5,10 +5,10 @@ import { menuItems, type MenuItem } from "@/lib/menu";
 import { submitOrder } from "@/app/actions";
 
 type CartItem = { id: string; name: string; price: number; quantity: number };
-type Category = "All" | "Hot" | "Iced" | "Blended";
+type Category = "All" | "Matcha" | "Hojicha";
 type OverlayStep = "cart" | "form";
 
-const CATEGORIES: Category[] = ["All", "Hot", "Iced", "Blended"];
+const CATEGORIES: Category[] = ["All", "Matcha", "Hojicha"];
 
 const cream = "#EDE8D5";
 const brown = "#3D1A08";
@@ -140,6 +140,29 @@ export function MenuPage() {
             </button>
           );
         })}
+      </div>
+
+      {/* ── LAUNCH PROMO ── */}
+      <div
+        style={{
+          margin: "1rem 1rem 0",
+          padding: "0.875rem 1.125rem",
+          backgroundColor: olive,
+          borderRadius: "0.875rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+        }}
+      >
+        <div style={{ fontSize: "1.25rem", flexShrink: 0 }}>🎉</div>
+        <div>
+          <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.875rem" }}>
+            Launch Special — All drinks ₱180
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
+            Today & tomorrow only · Aug 16–17
+          </div>
+        </div>
       </div>
 
       {/* ── MENU GRID ── */}
