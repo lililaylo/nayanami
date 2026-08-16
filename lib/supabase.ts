@@ -6,6 +6,10 @@ export type Order = {
   customer_name: string;
   phone: string;
   address: string;
+  social: string | null;
+  delivery_type: "now" | "scheduled";
+  delivery_date: string | null;
+  delivery_time: string | null;
   items: { id: string; name: string; price: number; quantity: number }[];
   total: number;
   status: "pending" | "confirmed" | "fulfilled" | "cancelled";

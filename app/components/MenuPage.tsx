@@ -23,7 +23,15 @@ export function MenuPage() {
   const [category, setCategory] = useState<Category>("All");
   const [showOverlay, setShowOverlay] = useState(false);
   const [step, setStep] = useState<OverlayStep>("cart");
-  const [form, setForm] = useState({ name: "", phone: "", address: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    social: "",
+    deliveryType: "now" as "now" | "scheduled",
+    deliveryDate: "",
+    deliveryTime: "",
+  });
   const [isPending, startTransition] = useTransition();
 
   const filtered =
@@ -64,8 +72,12 @@ export function MenuPage() {
     setShowOverlay(true);
   };
 
+  const scheduledFilled =
+    form.deliveryType === "now" ||
+    (form.deliveryDate.trim() !== "" && form.deliveryTime.trim() !== "");
+
   const canSubmit =
-    form.name.trim() && form.phone.trim() && form.address.trim() && !isPending;
+    form.name.trim() && form.phone.trim() && form.address.trim() && scheduledFilled && !isPending;
 
   const handlePlaceOrder = () => {
     if (!canSubmit) return;
@@ -74,6 +86,10 @@ export function MenuPage() {
       fd.append("name", form.name.trim());
       fd.append("phone", form.phone.trim());
       fd.append("address", form.address.trim());
+      fd.append("social", form.social.trim());
+      fd.append("deliveryType", form.deliveryType);
+      fd.append("deliveryDate", form.deliveryDate);
+      fd.append("deliveryTime", form.deliveryTime);
       fd.append("items", JSON.stringify(cart));
       fd.append("total", String(total));
       await submitOrder(fd);
@@ -717,6 +733,130 @@ export function MenuPage() {
                         resize: "none",
                       }}
                     />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.8125rem",
+                        fontWeight: 600,
+                        marginBottom: "0.375rem",
+                        color: brownMid,
+                      }}
+                    >
+                      Instagram or TikTok
+                    </label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: muted, fontSize: "0.9375rem", pointerEvents: "none" }}>@</span>
+                      <input
+                        type="text"
+                        value={form.social}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, social: e.target.value.replace(/^@/, "") }))
+                        }
+                        placeholder="yourhandle"
+                        style={{
+                          width: "100%",
+                          padding: "0.875rem 1rem 0.875rem 2rem",
+                          border: `1.5px solid ${creamDark}`,
+                          borderRadius: "0.75rem",
+                          fontSize: "0.9375rem",
+                          backgroundColor: creamLight,
+                          color: brown,
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        fontSize: "0.8125rem",
+                        fontWeight: 600,
+                        marginBottom: "0.625rem",
+                        color: brownMid,
+                      }}
+                    >
+                      Delivery Time *
+                    </label>
+                    <div
+                      style={{
+                        display: "flex",
+                        backgroundColor: creamDark,
+                        borderRadius: "0.75rem",
+                        padding: "0.25rem",
+                        gap: "0.25rem",
+                        marginBottom: "0.75rem",
+                      }}
+                    >
+                      {(["now", "scheduled"] as const).map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, deliveryType: opt }))}
+                          style={{
+                            flex: 1,
+                            padding: "0.625rem",
+                            borderRadius: "0.5rem",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "0.875rem",
+                            fontWeight: 600,
+                            backgroundColor: form.deliveryType === opt ? brown : "transparent",
+                            color: form.deliveryType === opt ? cream : brownMid,
+                            transition: "all 0.15s ease",
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {opt === "now" ? "Now" : "Schedule"}
+                        </button>
+                      ))}
+                    </div>
+
+                    {form.deliveryType === "scheduled" && (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Date</label>
+                          <input
+                            type="date"
+                            value={form.deliveryDate}
+                            min={new Date().toISOString().split("T")[0]}
+                            onChange={(e) => setForm((f) => ({ ...f, deliveryDate: e.target.value }))}
+                            style={{
+                              width: "100%",
+                              padding: "0.75rem 0.875rem",
+                              border: `1.5px solid ${creamDark}`,
+                              borderRadius: "0.75rem",
+                              fontSize: "0.875rem",
+                              backgroundColor: creamLight,
+                              color: brown,
+                              boxSizing: "border-box",
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Time</label>
+                          <input
+                            type="time"
+                            value={form.deliveryTime}
+                            onChange={(e) => setForm((f) => ({ ...f, deliveryTime: e.target.value }))}
+                            style={{
+                              width: "100%",
+                              padding: "0.75rem 0.875rem",
+                              border: `1.5px solid ${creamDark}`,
+                              borderRadius: "0.75rem",
+                              fontSize: "0.875rem",
+                              backgroundColor: creamLight,
+                              color: brown,
+                              boxSizing: "border-box",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

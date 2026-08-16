@@ -111,6 +111,15 @@ export default async function SuccessPage({
           <Row label="Name" value={order.customer_name} />
           <Row label="Phone" value={order.phone} />
           <Row label="Address" value={order.address} />
+          {order.social && <Row label="Social" value={`@${order.social}`} />}
+          <Row
+            label="Delivery"
+            value={
+              order.delivery_type === "now"
+                ? "As soon as possible"
+                : `${order.delivery_date ?? ""} at ${order.delivery_time ?? ""}`
+            }
+          />
         </div>
 
         {/* Order summary */}

@@ -101,6 +101,15 @@ function OrderCard({ order }: { order: Order }) {
         <Info label="Name" value={order.customer_name} />
         <Info label="Phone" value={order.phone} />
         <Info label="Address" value={order.address} />
+        {order.social && <Info label="Social" value={`@${order.social}`} />}
+        <Info
+          label="Delivery"
+          value={
+            order.delivery_type === "now"
+              ? "ASAP"
+              : `${order.delivery_date ?? ""} ${order.delivery_time ?? ""}`
+          }
+        />
       </div>
 
       {/* Items */}

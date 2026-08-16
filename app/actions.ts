@@ -7,6 +7,10 @@ export async function submitOrder(formData: FormData) {
   const name = (formData.get("name") as string).trim();
   const phone = (formData.get("phone") as string).trim();
   const address = (formData.get("address") as string).trim();
+  const social = (formData.get("social") as string).trim();
+  const deliveryType = formData.get("deliveryType") as string;
+  const deliveryDate = formData.get("deliveryDate") as string;
+  const deliveryTime = formData.get("deliveryTime") as string;
   const items = JSON.parse(formData.get("items") as string);
   const total = parseInt(formData.get("total") as string);
 
@@ -21,6 +25,10 @@ export async function submitOrder(formData: FormData) {
     customer_name: name,
     phone,
     address,
+    social,
+    delivery_type: deliveryType,
+    delivery_date: deliveryDate || null,
+    delivery_time: deliveryTime || null,
     items,
     total,
   });
