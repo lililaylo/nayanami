@@ -38,5 +38,22 @@ export async function submitOrder(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  if (process.env.NTFY_TOPIC) {
+    const itemSummary = (items as { quantity: number; name: string }[])
+      .map((i) => `${i.quantity}× ${i.name}`)
+      .join(", ");
+    const when =
+      deliveryType === "now" ? "ASAP" : `${deliveryDate} ${deliveryTime}`;
+    await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
+      method: "POST",
+      headers: {
+        Title: `New order from ${name}`,
+        Priority: "high",
+        Tags: "green_circle",
+      },
+      body: `${itemSummary}\n₱${total} · ${when}\n${address}`,
+    }).catch(() => {});
+  }
+
   redirect(`/success?id=${orderId}`);
 }
