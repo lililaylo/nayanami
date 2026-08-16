@@ -102,7 +102,7 @@ export function MenuPage() {
         <img
           src="/logo.png"
           alt="Nayanami"
-          style={{ height: "38px", width: "auto" }}
+          style={{ height: "56px", width: "auto" }}
         />
       </header>
 
@@ -147,19 +147,23 @@ export function MenuPage() {
         style={{
           margin: "1rem 1rem 0",
           padding: "0.875rem 1.125rem",
-          backgroundColor: olive,
+          backgroundColor: brown,
           borderRadius: "0.875rem",
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
         }}
       >
-        <div style={{ fontSize: "1.25rem", flexShrink: 0 }}>🎉</div>
+        <div style={{ flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg>
+        </div>
         <div>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: "0.875rem" }}>
+          <div style={{ color: cream, fontWeight: 700, fontSize: "0.875rem" }}>
             Launch Special — All drinks ₱180
           </div>
-          <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
+          <div style={{ color: "rgba(237,232,213,0.65)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
             Today & tomorrow only · Aug 16–17
           </div>
         </div>
