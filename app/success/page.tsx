@@ -46,10 +46,11 @@ export default async function SuccessPage({
       <div style={{ maxWidth: "480px", margin: "0 auto", width: "100%" }}>
         {/* Success icon + heading */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <img src="/logo.png" alt="Nayanami" style={{ height: "48px", width: "auto", margin: "0 auto 1.25rem", display: "block" }} />
           <div
             style={{
-              width: "4rem",
-              height: "4rem",
+              width: "3.5rem",
+              height: "3.5rem",
               borderRadius: "9999px",
               backgroundColor: olive,
               display: "flex",
@@ -58,7 +59,7 @@ export default async function SuccessPage({
               margin: "0 auto 1.25rem",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>

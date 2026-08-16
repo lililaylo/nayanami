@@ -92,23 +92,18 @@ export function MenuPage() {
       {/* ── HEADER ── */}
       <header
         style={{
-          padding: "2rem 1.5rem 1.25rem",
+          padding: "1.25rem 1.5rem",
           borderBottom: `1px solid ${creamDark}`,
-          textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <h1
-          style={{
-            fontSize: "clamp(3rem, 12vw, 5.5rem)",
-            fontFamily: "var(--font-playfair, serif)",
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            lineHeight: 1,
-            margin: 0,
-          }}
-        >
-          nayanami
-        </h1>
+        <img
+          src="/logo.png"
+          alt="Nayanami"
+          style={{ height: "56px", width: "auto", objectFit: "contain" }}
+        />
       </header>
 
       {/* ── CATEGORY TABS ── */}

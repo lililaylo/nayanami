@@ -46,19 +46,12 @@ export default async function AdminPage() {
         }}
       >
         <div>
-          <h1
-            style={{
-              fontFamily: "var(--font-playfair, serif)",
-              fontSize: "1.5rem",
-              fontWeight: 700,
-              margin: 0,
-            }}
-          >
-            nayanami
-          </h1>
-          <p style={{ color: "#8B7355", fontSize: "0.75rem", margin: "0.125rem 0 0" }}>
-            Orders dashboard
-          </p>
+          <div>
+            <img src="/logo.png" alt="Nayanami" style={{ height: "36px", width: "auto", display: "block", marginBottom: "0.25rem" }} />
+            <p style={{ color: "#8B7355", fontSize: "0.75rem", margin: 0 }}>
+              Orders dashboard
+            </p>
+          </div>
         </div>
         {pending > 0 && (
           <div
