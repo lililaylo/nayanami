@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Nayanami — Matcha",
+  title: "Nayanami",
   description: "Order your matcha. Handcrafted. PH delivery.",
 };
 
