@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { type Order } from "@/lib/supabase";
-import { updateOrderStatus } from "./actions";
+import { updateOrderStatus, deleteOrder } from "./actions";
 import { useRouter } from "next/navigation";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -35,6 +35,14 @@ function OrderCard({ order }: { order: Order }) {
   const handleStatus = (status: string) => {
     startTransition(async () => {
       await updateOrderStatus(order.id, status);
+      router.refresh();
+    });
+  };
+
+  const handleDelete = () => {
+    if (!confirm(`Delete order ${order.id}? This cannot be undone.`)) return;
+    startTransition(async () => {
+      await deleteOrder(order.id);
       router.refresh();
     });
   };
@@ -101,6 +109,7 @@ function OrderCard({ order }: { order: Order }) {
         <Info label="Name" value={order.customer_name} />
         <Info label="Phone" value={order.phone} />
         <Info label="Address" value={order.address} />
+        {order.payment_ref && <Info label="Ref #" value={order.payment_ref} />}
         {order.social && <Info label="Social" value={`@${order.social}`} />}
         <Info
           label="Delivery"
@@ -154,7 +163,7 @@ function OrderCard({ order }: { order: Order }) {
       </div>
 
       {/* Status actions */}
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
         {(["pending", "confirmed", "fulfilled", "cancelled"] as const)
           .filter((s) => s !== order.status)
           .map((s) => (
@@ -178,6 +187,24 @@ function OrderCard({ order }: { order: Order }) {
               Mark {s}
             </button>
           ))}
+        <button
+          onClick={handleDelete}
+          disabled={isPending}
+          style={{
+            marginLeft: "auto",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            padding: "0.375rem 0.875rem",
+            borderRadius: "9999px",
+            border: "1.5px solid #FCA5A5",
+            backgroundColor: "transparent",
+            color: "#991B1B",
+            cursor: isPending ? "not-allowed" : "pointer",
+            opacity: isPending ? 0.5 : 1,
+          }}
+        >
+          Delete
+        </button>
       </div>
     </div>
   );

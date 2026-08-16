@@ -13,6 +13,7 @@ export type Order = {
   items: { id: string; name: string; price: number; quantity: number }[];
   total: number;
   status: "pending" | "confirmed" | "fulfilled" | "cancelled";
+  payment_ref: string | null;
 };
 
 export function getSupabase() {

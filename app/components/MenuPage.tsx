@@ -32,6 +32,7 @@ export function MenuPage() {
     deliveryType: "now" as "now" | "scheduled",
     deliveryDate: "",
     deliveryTime: "",
+    paymentRef: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
@@ -106,6 +107,7 @@ export function MenuPage() {
       fd.append("deliveryType", form.deliveryType);
       fd.append("deliveryDate", form.deliveryDate);
       fd.append("deliveryTime", form.deliveryTime);
+      fd.append("paymentRef", form.paymentRef);
       fd.append("items", JSON.stringify(cart));
       fd.append("total", String(total));
       await submitOrder(fd);
@@ -935,6 +937,18 @@ export function MenuPage() {
                   <p style={{ fontSize: "0.75rem", color: muted, margin: 0 }}>
                     Scan to pay before your order is confirmed
                   </p>
+                  <div style={{ marginTop: "0.875rem" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: muted, marginBottom: "0.375rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Payment Reference <span style={{ fontWeight: 400 }}>(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.paymentRef}
+                      onChange={(e) => setForm((f) => ({ ...f, paymentRef: e.target.value }))}
+                      placeholder="Last 4 digits or transaction ref"
+                      style={{ width: "100%", padding: "0.75rem 1rem", border: `1.5px solid ${creamDark}`, borderRadius: "0.75rem", fontSize: "0.875rem", backgroundColor: cream, color: brown, boxSizing: "border-box" }}
+                    />
+                  </div>
                 </div>
 
                 <button

@@ -22,3 +22,7 @@ export async function loginAdmin(formData: FormData) {
 export async function updateOrderStatus(orderId: string, status: string) {
   await getSupabaseAdmin().from("orders").update({ status }).eq("id", orderId);
 }
+
+export async function deleteOrder(orderId: string) {
+  await getSupabaseAdmin().from("orders").delete().eq("id", orderId);
+}
