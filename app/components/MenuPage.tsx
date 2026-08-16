@@ -142,6 +142,13 @@ export function MenuPage() {
         })}
       </div>
 
+      {/* ── DRINKS NOTE ── */}
+      <div style={{ padding: "0.875rem 1rem 0", textAlign: "center" }}>
+        <p style={{ fontSize: "0.75rem", color: muted, margin: 0, letterSpacing: "0.01em" }}>
+          All drinks are <strong>12 oz</strong> · Made with <strong>oat milk</strong> by default
+        </p>
+      </div>
+
       {/* ── LAUNCH PROMO ── */}
       <div
         style={{
