@@ -162,10 +162,10 @@ export function MenuPage() {
       {/* ── MENU GRID ── */}
       <div
         style={{
-          padding: "1.25rem 1.5rem",
+          padding: "1.25rem 1rem",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(158px, 1fr))",
-          gap: "0.875rem",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "0.75rem",
           paddingBottom: count > 0 ? "6rem" : "2rem",
         }}
       >
@@ -319,32 +319,26 @@ export function MenuPage() {
             left: 0,
             right: 0,
             backgroundColor: brown,
-            padding: "1rem 1.5rem",
+            padding: "1rem 1.25rem",
+            paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
+            boxShadow: "0 -4px 20px rgba(0,0,0,0.2)",
           }}
         >
-          <span
-            style={{
-              color: cream,
-              fontSize: "0.875rem",
-              opacity: 0.7,
-            }}
-          >
+          <span style={{ color: cream, fontSize: "0.875rem", opacity: 0.7 }}>
             {count} item{count !== 1 ? "s" : ""}
           </span>
           <button
             onClick={openCart}
             style={{
               color: cream,
-              fontSize: "0.9375rem",
+              fontSize: "1rem",
               fontWeight: 700,
               background: "none",
               border: "none",
               cursor: "pointer",
-              letterSpacing: "0.01em",
             }}
           >
             View order · ₱{total.toLocaleString()} →
