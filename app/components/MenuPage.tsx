@@ -102,7 +102,7 @@ export function MenuPage() {
         <img
           src="/logo.png"
           alt="Nayanami"
-          style={{ height: "56px", width: "auto", objectFit: "contain" }}
+          style={{ height: "38px", width: "auto" }}
         />
       </header>
 
