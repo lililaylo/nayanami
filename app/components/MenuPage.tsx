@@ -923,9 +923,50 @@ export function MenuPage() {
                   </div>
                 </div>
 
-                <p style={{ fontSize: "0.75rem", color: muted, textAlign: "center", marginBottom: "1rem" }}>
-                  Payment via QR — GCash / Maya
-                </p>
+                {/* Payment QR */}
+                <div
+                  style={{
+                    backgroundColor: creamLight,
+                    border: `1.5px solid ${creamDark}`,
+                    borderRadius: "0.875rem",
+                    padding: "1.125rem",
+                    textAlign: "center",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: muted, marginBottom: "0.875rem" }}>
+                    Payment — GCash / Maya
+                  </div>
+                  <div
+                    style={{
+                      width: "140px",
+                      height: "140px",
+                      margin: "0 auto 0.75rem",
+                      backgroundColor: "#fff",
+                      border: `1.5px solid ${creamDark}`,
+                      borderRadius: "0.75rem",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={creamDark} strokeWidth="1.5">
+                      <rect x="3" y="3" width="7" height="7" rx="1" />
+                      <rect x="14" y="3" width="7" height="7" rx="1" />
+                      <rect x="3" y="14" width="7" height="7" rx="1" />
+                      <rect x="14" y="14" width="3" height="3" rx="0.5" fill={creamDark} stroke="none" />
+                      <rect x="19" y="14" width="2" height="2" rx="0.5" fill={creamDark} stroke="none" />
+                      <rect x="14" y="19" width="2" height="2" rx="0.5" fill={creamDark} stroke="none" />
+                      <rect x="18" y="18" width="3" height="3" rx="0.5" fill={creamDark} stroke="none" />
+                    </svg>
+                    <span style={{ fontSize: "0.625rem", color: muted, fontWeight: 600 }}>QR coming soon</span>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: muted, margin: 0 }}>
+                    Scan to pay before your order is confirmed
+                  </p>
+                </div>
 
                 <button
                   onClick={handlePlaceOrder}
