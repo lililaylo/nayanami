@@ -169,6 +169,50 @@ export default async function SuccessPage({
           </div>
         </div>
 
+        {/* Payment QR */}
+        <div
+          style={{
+            backgroundColor: creamLight,
+            border: `1px solid ${creamDark}`,
+            borderRadius: "0.875rem",
+            padding: "1.25rem",
+            textAlign: "center",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: muted, marginBottom: "0.875rem" }}>
+            Payment
+          </div>
+          <div
+            style={{
+              width: "160px",
+              height: "160px",
+              margin: "0 auto 1rem",
+              backgroundColor: "#fff",
+              border: `2px solid ${creamDark}`,
+              borderRadius: "0.75rem",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={creamDark} strokeWidth="1.5">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="3" height="3" rx="0.5" fill={creamDark} stroke="none" />
+              <rect x="19" y="14" width="2" height="2" rx="0.5" fill={creamDark} stroke="none" />
+              <rect x="14" y="19" width="2" height="2" rx="0.5" fill={creamDark} stroke="none" />
+              <rect x="18" y="18" width="3" height="3" rx="0.5" fill={creamDark} stroke="none" />
+            </svg>
+            <span style={{ fontSize: "0.6875rem", color: muted, fontWeight: 600 }}>QR coming soon</span>
+          </div>
+          <p style={{ fontSize: "0.8125rem", color: brownMid, margin: 0, fontWeight: 500 }}>GCash / Maya</p>
+          <p style={{ fontSize: "0.75rem", color: muted, margin: "0.25rem 0 0" }}>Send your receipt to confirm your order</p>
+        </div>
+
         <Link
           href="/"
           style={{

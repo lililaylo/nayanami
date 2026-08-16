@@ -23,7 +23,7 @@ export async function submitOrder(formData: FormData) {
   const { error } = await getSupabase().from("orders").insert({
     id: orderId,
     customer_name: name,
-    phone,
+    phone: `+63${phone}`,
     address,
     social,
     delivery_type: deliveryType,

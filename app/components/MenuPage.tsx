@@ -32,7 +32,22 @@ export function MenuPage() {
     deliveryDate: "",
     deliveryTime: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, startTransition] = useTransition();
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.name.trim()) e.name = "Name is required";
+    if (!/^\d{10}$/.test(form.phone.replace(/\s/g, "")))
+      e.phone = "Enter a valid 10-digit number (e.g. 9171234567)";
+    if (!form.address.trim()) e.address = "Delivery address is required";
+    if (form.deliveryType === "scheduled") {
+      if (!form.deliveryDate) e.deliveryDate = "Please select a date";
+      if (!form.deliveryTime) e.deliveryTime = "Please select a time";
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const filtered =
     category === "All"
@@ -72,15 +87,10 @@ export function MenuPage() {
     setShowOverlay(true);
   };
 
-  const scheduledFilled =
-    form.deliveryType === "now" ||
-    (form.deliveryDate.trim() !== "" && form.deliveryTime.trim() !== "");
-
-  const canSubmit =
-    form.name.trim() && form.phone.trim() && form.address.trim() && scheduledFilled && !isPending;
+  const canSubmit = !isPending;
 
   const handlePlaceOrder = () => {
-    if (!canSubmit) return;
+    if (!validate()) return;
     startTransition(async () => {
       const fd = new FormData();
       fd.append("name", form.name.trim());
@@ -639,67 +649,43 @@ export function MenuPage() {
                   }}
                 >
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.8125rem",
-                        fontWeight: 600,
-                        marginBottom: "0.375rem",
-                        color: brownMid,
-                      }}
-                    >
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
                       Full Name *
                     </label>
                     <input
                       type="text"
                       value={form.name}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, name: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, name: e.target.value }));
+                        if (errors.name) setErrors((er) => ({ ...er, name: "" }));
+                      }}
                       placeholder="e.g. Maria Santos"
                       autoComplete="name"
-                      style={{
-                        width: "100%",
-                        padding: "0.875rem 1rem",
-                        border: `1.5px solid ${creamDark}`,
-                        borderRadius: "0.75rem",
-                        fontSize: "0.9375rem",
-                        backgroundColor: creamLight,
-                        color: brown,
-                      }}
+                      style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.name ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, boxSizing: "border-box" }}
                     />
+                    {errors.name && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.name}</p>}
                   </div>
 
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.8125rem",
-                        fontWeight: 600,
-                        marginBottom: "0.375rem",
-                        color: brownMid,
-                      }}
-                    >
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
                       Phone Number *
                     </label>
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, phone: e.target.value }))
-                      }
-                      placeholder="09XX XXX XXXX"
-                      autoComplete="tel"
-                      style={{
-                        width: "100%",
-                        padding: "0.875rem 1rem",
-                        border: `1.5px solid ${creamDark}`,
-                        borderRadius: "0.75rem",
-                        fontSize: "0.9375rem",
-                        backgroundColor: creamLight,
-                        color: brown,
-                      }}
-                    />
+                    <div style={{ display: "flex", border: `1.5px solid ${errors.phone ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", overflow: "hidden", backgroundColor: creamLight }}>
+                      <span style={{ padding: "0.875rem 0.75rem 0.875rem 1rem", fontSize: "0.9375rem", color: brown, fontWeight: 600, flexShrink: 0, borderRight: `1px solid ${creamDark}` }}>+63</span>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setForm((f) => ({ ...f, phone: val }));
+                          if (errors.phone) setErrors((er) => ({ ...er, phone: "" }));
+                        }}
+                        placeholder="9171234567"
+                        autoComplete="tel"
+                        style={{ flex: 1, padding: "0.875rem 1rem", border: "none", fontSize: "0.9375rem", backgroundColor: "transparent", color: brown, outline: "none" }}
+                      />
+                    </div>
+                    {errors.phone && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.phone}</p>}
                   </div>
 
                   <div>
@@ -716,36 +702,21 @@ export function MenuPage() {
                     </label>
                     <textarea
                       value={form.address}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, address: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, address: e.target.value }));
+                        if (errors.address) setErrors((er) => ({ ...er, address: "" }));
+                      }}
                       placeholder="House/Unit No., Street, Barangay, City"
                       rows={3}
                       autoComplete="street-address"
-                      style={{
-                        width: "100%",
-                        padding: "0.875rem 1rem",
-                        border: `1.5px solid ${creamDark}`,
-                        borderRadius: "0.75rem",
-                        fontSize: "0.9375rem",
-                        backgroundColor: creamLight,
-                        color: brown,
-                        resize: "none",
-                      }}
+                      style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.address ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, resize: "none", boxSizing: "border-box" }}
                     />
+                    {errors.address && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.address}</p>}
                   </div>
 
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.8125rem",
-                        fontWeight: 600,
-                        marginBottom: "0.375rem",
-                        color: brownMid,
-                      }}
-                    >
-                      Instagram or TikTok
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
+                      Instagram or TikTok <span style={{ fontWeight: 400, color: muted }}>(for order updates)</span>
                     </label>
                     <div style={{ position: "relative" }}>
                       <span style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: muted, fontSize: "0.9375rem", pointerEvents: "none" }}>@</span>
