@@ -56,10 +56,11 @@ export default async function SuccessPage({
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 1.25rem",
-              fontSize: "1.75rem",
             }}
           >
-            🍵
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </div>
           <h1
             style={{
