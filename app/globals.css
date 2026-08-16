@@ -32,7 +32,23 @@ input, textarea, select, button {
   font-family: inherit;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: 2px solid #3D1A08;
   outline-offset: 1px;
+}
+
+select {
+  background-color: #F8F4EA;
+  color: #3D1A08;
+  border-color: #D4C9A8;
+}
+
+select option {
+  background-color: #F8F4EA;
+  color: #3D1A08;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
 }

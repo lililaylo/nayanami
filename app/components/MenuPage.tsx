@@ -838,7 +838,7 @@ export function MenuPage() {
                           <select
                             value={form.deliveryTime}
                             onChange={(e) => setForm((f) => ({ ...f, deliveryTime: e.target.value }))}
-                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryTime ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: form.deliveryTime ? brown : muted, boxSizing: "border-box", appearance: "none" }}
+                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryTime ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: form.deliveryTime ? brown : muted, boxSizing: "border-box" }}
                           >
                             <option value="" disabled>Select a time</option>
                             {["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
