@@ -38,7 +38,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "matcha-cloud-coconut",
     name: "Matcha Cloud Coconut",
-    description: "Creamy matcha topped with a light coconut cream cloud.",
+    description: "Smooth matcha poured over refreshing coconut juice — light, tropical, and naturally sweet.",
     price: 180,
     category: "Matcha",
   },
