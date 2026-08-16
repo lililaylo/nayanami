@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { supabaseAdmin, type Order } from "@/lib/supabase";
+import { getSupabaseAdmin, type Order } from "@/lib/supabase";
 
 export default async function SuccessPage({
   searchParams,
@@ -8,7 +8,7 @@ export default async function SuccessPage({
 }) {
   const { id } = await searchParams;
 
-  const { data: order } = await supabaseAdmin
+  const { data: order } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .eq("id", id)

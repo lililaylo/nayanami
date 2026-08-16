@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 
 export async function submitOrder(formData: FormData) {
   const name = (formData.get("name") as string).trim();
@@ -16,7 +16,7 @@ export async function submitOrder(formData: FormData) {
 
   const orderId = `NYM-${Date.now().toString(36).toUpperCase()}`;
 
-  const { error } = await supabase.from("orders").insert({
+  const { error } = await getSupabase().from("orders").insert({
     id: orderId,
     customer_name: name,
     phone,

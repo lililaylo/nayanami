@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function loginAdmin(formData: FormData) {
   const password = formData.get("password") as string;
@@ -20,5 +20,5 @@ export async function loginAdmin(formData: FormData) {
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
-  await supabaseAdmin.from("orders").update({ status }).eq("id", orderId);
+  await getSupabaseAdmin().from("orders").update({ status }).eq("id", orderId);
 }

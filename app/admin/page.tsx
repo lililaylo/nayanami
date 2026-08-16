@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { supabaseAdmin, type Order } from "@/lib/supabase";
+import { getSupabaseAdmin, type Order } from "@/lib/supabase";
 import { OrdersTable } from "./OrdersTable";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,7 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const { data: orders } = await supabaseAdmin
+  const { data: orders } = await getSupabaseAdmin()
     .from("orders")
     .select("*")
     .order("created_at", { ascending: false })
