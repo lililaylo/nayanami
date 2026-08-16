@@ -109,18 +109,6 @@ export function MenuPage() {
         >
           nayanami
         </h1>
-        <p
-          style={{
-            color: olive,
-            fontSize: "0.75rem",
-            letterSpacing: "0.15em",
-            textTransform: "uppercase",
-            marginTop: "0.5rem",
-            fontWeight: 600,
-          }}
-        >
-          matcha · handcrafted · ph
-        </p>
       </header>
 
       {/* ── CATEGORY TABS ── */}
