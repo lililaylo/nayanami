@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { menuItems, type MenuItem } from "@/lib/menu";
 import { submitOrder } from "@/app/actions";
 
@@ -835,16 +835,16 @@ export function MenuPage() {
                         </div>
                         <div>
                           <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Time</label>
-                          <select
+                          <CustomSelect
                             value={form.deliveryTime}
-                            onChange={(e) => setForm((f) => ({ ...f, deliveryTime: e.target.value }))}
-                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryTime ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: form.deliveryTime ? brown : muted, boxSizing: "border-box" }}
-                          >
-                            <option value="" disabled>Select a time</option>
-                            {["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
-                              <option key={t} value={t}>{t}</option>
-                            ))}
-                          </select>
+                            onChange={(v) => {
+                              setForm((f) => ({ ...f, deliveryTime: v }));
+                              if (errors.deliveryTime) setErrors((er) => ({ ...er, deliveryTime: "" }));
+                            }}
+                            options={["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"]}
+                            placeholder="Select a time"
+                            hasError={!!errors.deliveryTime}
+                          />
                           {errors.deliveryTime && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.deliveryTime}</p>}
                         </div>
                       </div>
@@ -956,6 +956,113 @@ export function MenuPage() {
               </>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  hasError?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%",
+          padding: "0.875rem 1rem",
+          border: `1.5px solid ${hasError ? "#c0392b" : creamDark}`,
+          borderRadius: "0.75rem",
+          fontSize: "0.9375rem",
+          backgroundColor: creamLight,
+          color: value ? brown : muted,
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span>{value || placeholder}</span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke={muted}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s ease", flexShrink: 0 }}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            right: 0,
+            backgroundColor: creamLight,
+            border: `1.5px solid ${creamDark}`,
+            borderRadius: "0.75rem",
+            overflow: "hidden",
+            zIndex: 100,
+            boxShadow: "0 4px 16px rgba(61,26,8,0.12)",
+          }}
+        >
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onMouseEnter={() => setHovered(opt)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={() => { onChange(opt); setOpen(false); }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                fontSize: "0.9375rem",
+                textAlign: "left",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: hovered === opt ? brown : opt === value ? creamDark : "transparent",
+                color: hovered === opt ? cream : brown,
+                fontWeight: opt === value ? 600 : 400,
+                transition: "background-color 0.1s ease",
+              }}
+            >
+              {opt}
+            </button>
+          ))}
         </div>
       )}
     </div>
