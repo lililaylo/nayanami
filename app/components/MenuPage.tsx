@@ -821,7 +821,7 @@ export function MenuPage() {
                     </div>
 
                     {form.deliveryType === "scheduled" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.625rem" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                         <div>
                           <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Date</label>
                           <input
@@ -829,35 +829,23 @@ export function MenuPage() {
                             value={form.deliveryDate}
                             min={new Date().toISOString().split("T")[0]}
                             onChange={(e) => setForm((f) => ({ ...f, deliveryDate: e.target.value }))}
-                            style={{
-                              width: "100%",
-                              padding: "0.75rem 0.875rem",
-                              border: `1.5px solid ${creamDark}`,
-                              borderRadius: "0.75rem",
-                              fontSize: "0.875rem",
-                              backgroundColor: creamLight,
-                              color: brown,
-                              boxSizing: "border-box",
-                            }}
+                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryDate ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, boxSizing: "border-box" }}
                           />
+                          {errors.deliveryDate && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.deliveryDate}</p>}
                         </div>
                         <div>
                           <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Time</label>
-                          <input
-                            type="time"
+                          <select
                             value={form.deliveryTime}
                             onChange={(e) => setForm((f) => ({ ...f, deliveryTime: e.target.value }))}
-                            style={{
-                              width: "100%",
-                              padding: "0.75rem 0.875rem",
-                              border: `1.5px solid ${creamDark}`,
-                              borderRadius: "0.75rem",
-                              fontSize: "0.875rem",
-                              backgroundColor: creamLight,
-                              color: brown,
-                              boxSizing: "border-box",
-                            }}
-                          />
+                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryTime ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: form.deliveryTime ? brown : muted, boxSizing: "border-box", appearance: "none" }}
+                          >
+                            <option value="" disabled>Select a time</option>
+                            {["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"].map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                          {errors.deliveryTime && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.deliveryTime}</p>}
                         </div>
                       </div>
                     )}
