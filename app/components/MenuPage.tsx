@@ -197,7 +197,7 @@ export function MenuPage() {
             Launch Special — All drinks ₱180
           </div>
           <div style={{ color: "rgba(237,232,213,0.65)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
-            Today & tomorrow only · Aug 16–18
+            Aug 17–18 only
           </div>
         </div>
       </div>
