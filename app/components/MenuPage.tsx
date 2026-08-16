@@ -27,6 +27,7 @@ export function MenuPage() {
     name: "",
     phone: "",
     address: "",
+    socialPlatform: "instagram" as "instagram" | "tiktok",
     social: "",
     deliveryType: "now" as "now" | "scheduled",
     deliveryDate: "",
@@ -40,7 +41,11 @@ export function MenuPage() {
     if (!form.name.trim()) e.name = "Name is required";
     if (!/^\d{10}$/.test(form.phone.replace(/\s/g, "")))
       e.phone = "Enter a valid 10-digit number (e.g. 9171234567)";
-    if (!form.address.trim()) e.address = "Delivery address is required";
+    if (!form.address.trim()) {
+      e.address = "Delivery address is required";
+    } else if (!form.address.toLowerCase().includes("pasig")) {
+      e.address = "Sorry, we only deliver within Pasig City.";
+    }
     if (form.deliveryType === "scheduled") {
       if (!form.deliveryDate) e.deliveryDate = "Please select a date";
       if (!form.deliveryTime) e.deliveryTime = "Please select a time";
@@ -97,6 +102,7 @@ export function MenuPage() {
       fd.append("phone", form.phone.trim());
       fd.append("address", form.address.trim());
       fd.append("social", form.social.trim());
+      fd.append("socialPlatform", form.socialPlatform);
       fd.append("deliveryType", form.deliveryType);
       fd.append("deliveryDate", form.deliveryDate);
       fd.append("deliveryTime", form.deliveryTime);
@@ -715,28 +721,55 @@ export function MenuPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
-                      Instagram or TikTok <span style={{ fontWeight: 400, color: muted }}>(for order updates)</span>
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem", color: brownMid }}>
+                      Social <span style={{ fontWeight: 400, color: muted }}>(for order updates)</span>
                     </label>
-                    <div style={{ position: "relative" }}>
-                      <span style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: muted, fontSize: "0.9375rem", pointerEvents: "none" }}>@</span>
+                    <div style={{ display: "flex", backgroundColor: creamDark, borderRadius: "0.75rem", padding: "0.25rem", gap: "0.25rem", marginBottom: "0.625rem" }}>
+                      {(["instagram", "tiktok"] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, socialPlatform: p }))}
+                          style={{
+                            flex: 1,
+                            padding: "0.5rem",
+                            borderRadius: "0.5rem",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "0.8125rem",
+                            fontWeight: 600,
+                            backgroundColor: form.socialPlatform === p ? brown : "transparent",
+                            color: form.socialPlatform === p ? cream : brownMid,
+                            transition: "all 0.15s ease",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.375rem",
+                          }}
+                        >
+                          {p === "instagram" ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                              <circle cx="12" cy="12" r="4"/>
+                              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.77a4.85 4.85 0 0 1-1.01-.08z"/>
+                            </svg>
+                          )}
+                          {p === "instagram" ? "Instagram" : "TikTok"}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", border: `1.5px solid ${creamDark}`, borderRadius: "0.75rem", overflow: "hidden", backgroundColor: creamLight }}>
+                      <span style={{ padding: "0.875rem 0.75rem 0.875rem 1rem", fontSize: "0.9375rem", color: muted, flexShrink: 0, borderRight: `1px solid ${creamDark}` }}>@</span>
                       <input
                         type="text"
                         value={form.social}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, social: e.target.value.replace(/^@/, "") }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, social: e.target.value.replace(/^@/, "") }))}
                         placeholder="yourhandle"
-                        style={{
-                          width: "100%",
-                          padding: "0.875rem 1rem 0.875rem 2rem",
-                          border: `1.5px solid ${creamDark}`,
-                          borderRadius: "0.75rem",
-                          fontSize: "0.9375rem",
-                          backgroundColor: creamLight,
-                          color: brown,
-                          boxSizing: "border-box",
-                        }}
+                        style={{ flex: 1, padding: "0.875rem 1rem", border: "none", fontSize: "0.9375rem", backgroundColor: "transparent", color: brown, outline: "none" }}
                       />
                     </div>
                   </div>
@@ -890,15 +923,8 @@ export function MenuPage() {
                   </div>
                 </div>
 
-                <p
-                  style={{
-                    fontSize: "0.75rem",
-                    color: muted,
-                    textAlign: "center",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  Payment: Cash on Delivery
+                <p style={{ fontSize: "0.75rem", color: muted, textAlign: "center", marginBottom: "1rem" }}>
+                  Payment via QR — GCash / Maya
                 </p>
 
                 <button

@@ -165,7 +165,7 @@ export default async function SuccessPage({
             <span style={{ color: olive }}>₱{order.total.toLocaleString()}</span>
           </div>
           <div style={{ marginTop: "0.375rem", fontSize: "0.75rem", color: muted, textAlign: "right" }}>
-            Cash on Delivery
+            Payment via QR
           </div>
         </div>
 

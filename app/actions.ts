@@ -8,6 +8,7 @@ export async function submitOrder(formData: FormData) {
   const phone = (formData.get("phone") as string).trim();
   const address = (formData.get("address") as string).trim();
   const social = (formData.get("social") as string).trim();
+  const socialPlatform = formData.get("socialPlatform") as string;
   const deliveryType = formData.get("deliveryType") as string;
   const deliveryDate = formData.get("deliveryDate") as string;
   const deliveryTime = formData.get("deliveryTime") as string;
@@ -25,7 +26,7 @@ export async function submitOrder(formData: FormData) {
     customer_name: name,
     phone: `+63${phone}`,
     address,
-    social,
+    social: social ? `${socialPlatform}:${social}` : null,
     delivery_type: deliveryType,
     delivery_date: deliveryDate || null,
     delivery_time: deliveryTime || null,
