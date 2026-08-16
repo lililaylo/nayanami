@@ -824,12 +824,14 @@ export function MenuPage() {
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                         <div>
                           <label style={{ display: "block", fontSize: "0.75rem", color: muted, marginBottom: "0.25rem" }}>Date</label>
-                          <input
-                            type="date"
+                          <CustomDatePicker
                             value={form.deliveryDate}
                             min={new Date().toISOString().split("T")[0]}
-                            onChange={(e) => setForm((f) => ({ ...f, deliveryDate: e.target.value }))}
-                            style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.deliveryDate ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, boxSizing: "border-box" }}
+                            onChange={(v) => {
+                              setForm((f) => ({ ...f, deliveryDate: v }));
+                              if (errors.deliveryDate) setErrors((er) => ({ ...er, deliveryDate: "" }));
+                            }}
+                            hasError={!!errors.deliveryDate}
                           />
                           {errors.deliveryDate && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.deliveryDate}</p>}
                         </div>
@@ -955,6 +957,171 @@ export function MenuPage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOW = ["S","M","T","W","T","F","S"];
+
+function CustomDatePicker({
+  value,
+  onChange,
+  min,
+  hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  min?: string;
+  hasError?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [hovered, setHovered] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const selected = value ? new Date(value + "T00:00:00") : null;
+  const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); }
+    else setViewMonth((m) => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); }
+    else setViewMonth((m) => m + 1);
+  };
+
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+
+  const isDisabled = (day: number) => {
+    if (!min) return false;
+    const d = new Date(viewYear, viewMonth, day);
+    return d < new Date(min + "T00:00:00");
+  };
+  const isSelected = (day: number) =>
+    !!selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === day;
+  const isTodayDay = (day: number) =>
+    today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
+
+  const handleSelect = (day: number) => {
+    if (isDisabled(day)) return;
+    const mm = String(viewMonth + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    onChange(`${viewYear}-${mm}-${dd}`);
+    setOpen(false);
+  };
+
+  const displayValue = selected
+    ? selected.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : "";
+
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%",
+          padding: "0.875rem 1rem",
+          border: `1.5px solid ${hasError ? "#c0392b" : creamDark}`,
+          borderRadius: "0.75rem",
+          fontSize: "0.9375rem",
+          backgroundColor: creamLight,
+          color: displayValue ? brown : muted,
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span>{displayValue || "Select a date"}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={muted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          backgroundColor: creamLight,
+          border: `1.5px solid ${creamDark}`,
+          borderRadius: "0.875rem",
+          zIndex: 100,
+          boxShadow: "0 4px 20px rgba(61,26,8,0.14)",
+          padding: "1rem",
+        }}>
+          {/* Month navigation */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.875rem" }}>
+            <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", cursor: "pointer", color: brown, fontSize: "1.25rem", lineHeight: 1, padding: "0.25rem 0.5rem", borderRadius: "0.5rem" }}>‹</button>
+            <span style={{ fontWeight: 700, fontSize: "0.9375rem", color: brown }}>{MONTHS[viewMonth]} {viewYear}</span>
+            <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", cursor: "pointer", color: brown, fontSize: "1.25rem", lineHeight: 1, padding: "0.25rem 0.5rem", borderRadius: "0.5rem" }}>›</button>
+          </div>
+
+          {/* Day-of-week headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", marginBottom: "0.25rem" }}>
+            {DOW.map((d, i) => (
+              <div key={i} style={{ textAlign: "center", fontSize: "0.6875rem", fontWeight: 700, color: muted, padding: "0.25rem 0" }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const sel = isSelected(day);
+              const dis = isDisabled(day);
+              const tod = isTodayDay(day);
+              const hov = hovered === day && !dis;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onMouseEnter={() => !dis && setHovered(day)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => handleSelect(day)}
+                  disabled={dis}
+                  style={{
+                    padding: "0.375rem 0",
+                    borderRadius: "0.5rem",
+                    border: tod && !sel ? `1.5px solid ${brown}` : "1.5px solid transparent",
+                    backgroundColor: sel ? brown : hov ? creamDark : "transparent",
+                    color: sel ? cream : dis ? "#C4B99A" : brown,
+                    fontSize: "0.875rem",
+                    fontWeight: sel || tod ? 700 : 400,
+                    cursor: dis ? "default" : "pointer",
+                    textAlign: "center",
+                    transition: "background-color 0.1s ease",
+                  }}
+                >
+                  {day}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
