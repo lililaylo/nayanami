@@ -4,52 +4,48 @@ export type MenuItem = {
   description: string;
   price: number;
   category: "Matcha" | "Hojicha";
-  popular?: boolean;
 };
 
 export const menuItems: MenuItem[] = [
   {
     id: "matcha-latte",
     name: "Matcha Latte",
-    description: "Smooth ceremonial matcha with steamed milk",
+    description: "Smooth ceremonial matcha with milk over ice",
     price: 180,
     category: "Matcha",
   },
   {
     id: "seasalt-cream-matcha",
     name: "Seasalt Cream Matcha Latte",
-    description: "Matcha latte topped with salted cream foam",
+    description: "Iced matcha latte topped with salted cream foam",
     price: 180,
     category: "Matcha",
-    popular: true,
   },
   {
     id: "earl-grey-matcha",
     name: "Earl Grey Matcha Latte",
-    description: "Floral earl grey blended with ceremonial matcha",
+    description: "Floral earl grey blended with ceremonial matcha over ice",
     price: 180,
     category: "Matcha",
-    popular: true,
   },
   {
     id: "toasted-milk-cereal-matcha",
     name: "Toasted Milk Cereal Matcha Latte",
-    description: "Matcha latte with toasted milk cereal flavor",
+    description: "Iced matcha with a toasted milk cereal finish",
     price: 180,
     category: "Matcha",
-    popular: true,
   },
   {
     id: "tokyo-fog",
     name: "Tokyo Fog",
-    description: "Earl grey vanilla latte with a matcha swirl",
+    description: "Earl grey vanilla latte with a matcha swirl over ice",
     price: 180,
     category: "Matcha",
   },
   {
     id: "egg-cream-matcha",
     name: "Egg Cream Matcha",
-    description: "Silky matcha with a creamy egg foam topping",
+    description: "Iced matcha with a silky egg cream topping",
     price: 180,
     category: "Matcha",
   },
@@ -63,16 +59,15 @@ export const menuItems: MenuItem[] = [
   {
     id: "hojicha-latte",
     name: "Hojicha Latte",
-    description: "Roasted green tea with warm steamed milk",
+    description: "Roasted green tea with milk over ice",
     price: 180,
     category: "Hojicha",
   },
   {
     id: "seasalt-cream-hojicha",
     name: "Seasalt Cream Hojicha",
-    description: "Hojicha latte topped with salted cream foam",
+    description: "Iced hojicha latte topped with salted cream foam",
     price: 180,
     category: "Hojicha",
-    popular: true,
   },
 ];

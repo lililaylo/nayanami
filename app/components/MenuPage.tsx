@@ -194,19 +194,6 @@ export function MenuPage() {
                 gap: "0.375rem",
               }}
             >
-              {item.popular && (
-                <span
-                  style={{
-                    fontSize: "0.625rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: olive,
-                  }}
-                >
-                  Popular
-                </span>
-              )}
               <div
                 style={{
                   fontSize: "0.9375rem",
