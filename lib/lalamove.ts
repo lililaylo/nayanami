@@ -14,11 +14,13 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Lalamove PH motorcycle pricing: ₱55 base (first 3 km), ₱10/km after
 function estimateFare(km: number): number {
-  const base = 70;
-  const perKm = 12;
-  // Round up to nearest ₱5
-  return Math.ceil((base + km * perKm) / 5) * 5;
+  const base = 55;
+  const freeKm = 3;
+  const perKm = 10;
+  const extra = Math.max(0, km - freeKm);
+  return Math.ceil(base + extra * perKm);
 }
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {

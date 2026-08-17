@@ -10,6 +10,15 @@ type OverlayStep = "cart" | "form";
 
 const CATEGORIES: Category[] = ["All", "Matcha", "Hojicha"];
 
+const PASIG_BARANGAYS = [
+  "Bagong Ilog", "Bagong Katipunan", "Bambang", "Buting", "Caniogan",
+  "Dela Paz", "Kalawaan", "Kapasigan", "Kapitolyo", "Malinao", "Manggahan",
+  "Maybunga", "Oranbo", "Palatiw", "Pinagbuhatan", "Pineda", "Rosario",
+  "Sagad", "San Antonio", "San Joaquin", "San Jose", "San Miguel",
+  "San Nicolas", "Santa Cruz", "Santa Lucia", "Santa Rosa", "Santo Tomas",
+  "Santolan", "Sumilang", "Ugong",
+];
+
 const cream = "#EDE8D5";
 const brown = "#3D1A08";
 const olive = "#7A7B1C";
@@ -26,7 +35,8 @@ export function MenuPage() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    address: "",
+    street: "",
+    barangay: "",
     socialPlatform: "instagram" as "instagram" | "tiktok",
     social: "",
     deliveryType: "now" as "now" | "scheduled",
@@ -43,11 +53,8 @@ export function MenuPage() {
     if (!form.name.trim()) e.name = "Name is required";
     if (!/^\d{10}$/.test(form.phone.replace(/\s/g, "")))
       e.phone = "Enter a valid 10-digit number (e.g. 9171234567)";
-    if (!form.address.trim()) {
-      e.address = "Delivery address is required";
-    } else if (!form.address.toLowerCase().includes("pasig")) {
-      e.address = "Sorry, we only deliver within Pasig City.";
-    }
+    if (!form.street.trim()) e.street = "Street address is required";
+    if (!form.barangay) e.barangay = "Please select your barangay";
     if (!form.social.trim()) e.social = "Social handle is required";
     if (!form.paymentRef.trim()) e.paymentRef = "Payment reference is required";
     if (form.deliveryType === "scheduled") {
@@ -58,13 +65,20 @@ export function MenuPage() {
     return Object.keys(e).length === 0;
   };
 
-  const handleEstimateDelivery = () => {
+  useEffect(() => {
+    if (!form.street.trim() || !form.barangay) {
+      setDeliveryFee(null);
+      return;
+    }
     setDeliveryFee("loading");
-    startTransition(async () => {
-      const fee = await fetchDeliveryQuote(form.address.trim());
-      setDeliveryFee(fee !== null ? fee : "failed");
-    });
-  };
+    const timer = setTimeout(() => {
+      const fullAddress = `${form.street.trim()}, ${form.barangay}, Pasig City`;
+      fetchDeliveryQuote(fullAddress).then((fee) => {
+        setDeliveryFee(fee !== null ? fee : "failed");
+      });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [form.street, form.barangay]);
 
   const filtered =
     category === "All"
@@ -112,7 +126,7 @@ export function MenuPage() {
       const fd = new FormData();
       fd.append("name", form.name.trim());
       fd.append("phone", form.phone.trim());
-      fd.append("address", form.address.trim());
+      fd.append("address", `${form.street.trim()}, ${form.barangay}, Pasig City`);
       fd.append("social", form.social.trim());
       fd.append("socialPlatform", form.socialPlatform);
       fd.append("deliveryType", form.deliveryType);
@@ -708,62 +722,65 @@ export function MenuPage() {
                     {errors.phone && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.phone}</p>}
                   </div>
 
+                  {/* House/Street */}
                   <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "0.8125rem",
-                        fontWeight: 600,
-                        marginBottom: "0.375rem",
-                        color: brownMid,
-                      }}
-                    >
-                      Delivery Address *
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
+                      House/Unit No. & Street *
                     </label>
-                    <textarea
-                      value={form.address}
+                    <input
+                      type="text"
+                      value={form.street}
                       onChange={(e) => {
-                        setForm((f) => ({ ...f, address: e.target.value }));
-                        setDeliveryFee(null);
-                        if (errors.address) setErrors((er) => ({ ...er, address: "" }));
+                        setForm((f) => ({ ...f, street: e.target.value }));
+                        if (errors.street) setErrors((er) => ({ ...er, street: "" }));
                       }}
-                      placeholder="House/Unit No., Street, Barangay, City"
-                      rows={3}
-                      autoComplete="street-address"
-                      style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.address ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, resize: "none", boxSizing: "border-box" }}
+                      placeholder="e.g. 23 Kalayaan St."
+                      autoComplete="address-line1"
+                      style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.street ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, boxSizing: "border-box" }}
                     />
-                    {errors.address && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.address}</p>}
-                    {form.address.toLowerCase().includes("pasig") && !errors.address && (
-                      <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.625rem", flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          onClick={handleEstimateDelivery}
-                          disabled={deliveryFee === "loading" || isPending}
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            padding: "0.375rem 0.875rem",
-                            borderRadius: "9999px",
-                            border: `1.5px solid ${creamDark}`,
-                            backgroundColor: "transparent",
-                            color: brownMid,
-                            cursor: deliveryFee === "loading" ? "not-allowed" : "pointer",
-                            opacity: deliveryFee === "loading" ? 0.6 : 1,
-                          }}
-                        >
-                          {deliveryFee === "loading" ? "Calculating…" : "Estimate delivery fee"}
-                        </button>
-                        {typeof deliveryFee === "number" && (
-                          <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: olive }}>
-                            ~₱{deliveryFee} estimated
-                          </span>
-                        )}
-                        {deliveryFee === "failed" && (
-                          <span style={{ fontSize: "0.75rem", color: muted }}>Could not estimate fee</span>
-                        )}
-                      </div>
-                    )}
+                    {errors.street && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.street}</p>}
                   </div>
+
+                  {/* Barangay */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
+                      Barangay *
+                    </label>
+                    <CustomSelect
+                      value={form.barangay}
+                      onChange={(v) => {
+                        setForm((f) => ({ ...f, barangay: v }));
+                        if (errors.barangay) setErrors((er) => ({ ...er, barangay: "" }));
+                      }}
+                      options={PASIG_BARANGAYS}
+                      placeholder="Select barangay"
+                      hasError={!!errors.barangay}
+                    />
+                    {errors.barangay && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.barangay}</p>}
+                  </div>
+
+                  {/* City — fixed */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>City</label>
+                    <div style={{ padding: "0.875rem 1rem", backgroundColor: creamDark, borderRadius: "0.75rem", fontSize: "0.9375rem", color: brownMid, fontWeight: 500 }}>
+                      Pasig City
+                    </div>
+                  </div>
+
+                  {/* Delivery fee estimate */}
+                  {(deliveryFee === "loading" || typeof deliveryFee === "number" || deliveryFee === "failed") && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8125rem" }}>
+                      {deliveryFee === "loading" && (
+                        <span style={{ color: muted }}>Calculating delivery fee…</span>
+                      )}
+                      {typeof deliveryFee === "number" && (
+                        <span style={{ color: olive, fontWeight: 700 }}>~₱{deliveryFee} estimated delivery fee</span>
+                      )}
+                      {deliveryFee === "failed" && (
+                        <span style={{ color: muted }}>Could not estimate delivery fee</span>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem", color: brownMid }}>
