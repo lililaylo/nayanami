@@ -746,7 +746,7 @@ export function MenuPage() {
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
                       Barangay *
                     </label>
-                    <CustomSelect
+                    <SearchableSelect
                       value={form.barangay}
                       onChange={(v) => {
                         setForm((f) => ({ ...f, barangay: v }));
@@ -1206,6 +1206,149 @@ function CustomDatePicker({
                 </button>
               );
             })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SearchableSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  hasError,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder: string;
+  hasError?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [hovered, setHovered] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filtered = options.filter((o) => o.toLowerCase().includes(query.toLowerCase()));
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleOpen = () => {
+    setOpen(true);
+    setQuery("");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleSelect = (opt: string) => {
+    onChange(opt);
+    setOpen(false);
+    setQuery("");
+  };
+
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
+      <button
+        type="button"
+        onClick={handleOpen}
+        style={{
+          width: "100%",
+          padding: "0.875rem 1rem",
+          border: `1.5px solid ${hasError ? "#c0392b" : creamDark}`,
+          borderRadius: "0.75rem",
+          fontSize: "0.9375rem",
+          backgroundColor: creamLight,
+          color: value ? brown : muted,
+          boxSizing: "border-box",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span>{value || placeholder}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.15s ease", flexShrink: 0 }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          backgroundColor: creamLight,
+          border: `1.5px solid ${creamDark}`,
+          borderRadius: "0.75rem",
+          zIndex: 100,
+          boxShadow: "0 4px 16px rgba(61,26,8,0.12)",
+          overflow: "hidden",
+        }}>
+          {/* Search input */}
+          <div style={{ padding: "0.625rem", borderBottom: `1px solid ${creamDark}` }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search barangay…"
+              style={{
+                width: "100%",
+                padding: "0.5rem 0.75rem",
+                border: `1.5px solid ${creamDark}`,
+                borderRadius: "0.5rem",
+                fontSize: "0.875rem",
+                backgroundColor: cream,
+                color: brown,
+                boxSizing: "border-box",
+                outline: "none",
+              }}
+            />
+          </div>
+
+          {/* Options list */}
+          <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: "0.75rem 1rem", fontSize: "0.875rem", color: muted }}>No results</div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onMouseEnter={() => setHovered(opt)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => handleSelect(opt)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    padding: "0.75rem 1rem",
+                    fontSize: "0.9375rem",
+                    textAlign: "left",
+                    border: "none",
+                    cursor: "pointer",
+                    backgroundColor: hovered === opt ? brown : opt === value ? creamDark : "transparent",
+                    color: hovered === opt ? cream : brown,
+                    fontWeight: opt === value ? 600 : 400,
+                    transition: "background-color 0.1s ease",
+                  }}
+                >
+                  {opt}
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}
