@@ -2,72 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
-import { getDeliveryFee, getDeliveryFeeFromCoords } from "@/lib/lalamove";
+import { getDeliveryFeeForBarangay } from "@/lib/lalamove";
 
-export async function fetchDeliveryQuote(address: string): Promise<number | null> {
-  return getDeliveryFee(address);
-}
-
-export async function fetchDeliveryQuoteFromCoords(lat: number, lng: number): Promise<number> {
-  return getDeliveryFeeFromCoords(lat, lng);
-}
-
-export async function getAddressSuggestions(
-  query: string
-): Promise<Array<{ id: string; label: string; lat: number; lng: number }>> {
-  if (query.trim().length < 3) return [];
-
-  const googleKey = process.env.GOOGLE_MAPS_API_KEY;
-
-  if (googleKey) {
-    try {
-      const acRes = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query + ", Pasig City")}&key=${googleKey}&components=country:ph&language=en&location=14.5761,121.0607&radius=20000`,
-        { headers: { "User-Agent": "Nayanami/1.0" } }
-      );
-      const acData = await acRes.json();
-      const predictions: Array<{ place_id: string; description: string }> =
-        acData.predictions?.slice(0, 5) ?? [];
-
-      const results = await Promise.all(
-        predictions.map(async (p) => {
-          const detailRes = await fetch(
-            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${p.place_id}&key=${googleKey}&fields=geometry`,
-            { headers: { "User-Agent": "Nayanami/1.0" } }
-          );
-          const detail = await detailRes.json();
-          const loc = detail.result?.geometry?.location;
-          return {
-            id: p.place_id,
-            label: p.description,
-            lat: loc?.lat ?? 0,
-            lng: loc?.lng ?? 0,
-          };
-        })
-      );
-      return results.filter((r) => r.lat !== 0);
-    } catch {
-      // fall through to Nominatim
-    }
-  }
-
-  // Free fallback: Nominatim
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ", Pasig City, Philippines")}&format=json&limit=5&countrycodes=ph&addressdetails=0`,
-      { headers: { "User-Agent": "Nayanami/1.0" } }
-    );
-    const data: Array<{ place_id: number; display_name: string; lat: string; lon: string }> =
-      await res.json();
-    return data.map((r, i) => ({
-      id: String(r.place_id ?? i),
-      label: r.display_name.split(", ").slice(0, 4).join(", "),
-      lat: parseFloat(r.lat),
-      lng: parseFloat(r.lon),
-    }));
-  } catch {
-    return [];
-  }
+export async function fetchDeliveryQuoteFromBarangay(barangay: string): Promise<number | null> {
+  return getDeliveryFeeForBarangay(barangay);
 }
 
 export async function submitOrder(formData: FormData) {
