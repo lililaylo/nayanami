@@ -2,6 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
+import { getDeliveryFee } from "@/lib/lalamove";
+
+export async function fetchDeliveryQuote(address: string): Promise<number | null> {
+  return getDeliveryFee(address);
+}
 
 export async function submitOrder(formData: FormData) {
   const name = (formData.get("name") as string).trim();
@@ -13,8 +18,10 @@ export async function submitOrder(formData: FormData) {
   const deliveryDate = formData.get("deliveryDate") as string;
   const deliveryTime = formData.get("deliveryTime") as string;
   const paymentRef = (formData.get("paymentRef") as string | null)?.trim() || null;
+  const deliveryFee = parseInt(formData.get("deliveryFee") as string) || 0;
   const items = JSON.parse(formData.get("items") as string);
-  const total = parseInt(formData.get("total") as string);
+  const itemsTotal = parseInt(formData.get("total") as string);
+  const total = itemsTotal + deliveryFee;
 
   if (!name || !phone || !address || !items?.length) {
     throw new Error("Missing required fields");
@@ -33,6 +40,7 @@ export async function submitOrder(formData: FormData) {
     delivery_time: deliveryTime || null,
     items,
     total,
+    delivery_fee: deliveryFee || null,
     payment_ref: paymentRef,
   });
 

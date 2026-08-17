@@ -14,6 +14,7 @@ export type Order = {
   total: number;
   status: "pending" | "confirmed" | "fulfilled" | "cancelled";
   payment_ref: string | null;
+  delivery_fee: number | null;
 };
 
 export function getSupabase() {

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { menuItems, type MenuItem } from "@/lib/menu";
-import { submitOrder } from "@/app/actions";
+import { submitOrder, fetchDeliveryQuote } from "@/app/actions";
 
 type CartItem = { id: string; name: string; price: number; quantity: number };
 type Category = "All" | "Matcha" | "Hojicha";
@@ -35,6 +35,7 @@ export function MenuPage() {
     paymentRef: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [deliveryFee, setDeliveryFee] = useState<number | null | "loading" | "failed">(null);
   const [isPending, startTransition] = useTransition();
 
   const validate = () => {
@@ -55,6 +56,14 @@ export function MenuPage() {
     }
     setErrors(e);
     return Object.keys(e).length === 0;
+  };
+
+  const handleEstimateDelivery = () => {
+    setDeliveryFee("loading");
+    startTransition(async () => {
+      const fee = await fetchDeliveryQuote(form.address.trim());
+      setDeliveryFee(fee !== null ? fee : "failed");
+    });
   };
 
   const filtered =
@@ -110,6 +119,7 @@ export function MenuPage() {
       fd.append("deliveryDate", form.deliveryDate);
       fd.append("deliveryTime", form.deliveryTime);
       fd.append("paymentRef", form.paymentRef);
+      fd.append("deliveryFee", String(typeof deliveryFee === "number" ? deliveryFee : 0));
       fd.append("items", JSON.stringify(cart));
       fd.append("total", String(total));
       await submitOrder(fd);
@@ -714,6 +724,7 @@ export function MenuPage() {
                       value={form.address}
                       onChange={(e) => {
                         setForm((f) => ({ ...f, address: e.target.value }));
+                        setDeliveryFee(null);
                         if (errors.address) setErrors((er) => ({ ...er, address: "" }));
                       }}
                       placeholder="House/Unit No., Street, Barangay, City"
@@ -722,6 +733,36 @@ export function MenuPage() {
                       style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.address ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, resize: "none", boxSizing: "border-box" }}
                     />
                     {errors.address && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.address}</p>}
+                    {form.address.toLowerCase().includes("pasig") && !errors.address && (
+                      <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.625rem", flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={handleEstimateDelivery}
+                          disabled={deliveryFee === "loading" || isPending}
+                          style={{
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            padding: "0.375rem 0.875rem",
+                            borderRadius: "9999px",
+                            border: `1.5px solid ${creamDark}`,
+                            backgroundColor: "transparent",
+                            color: brownMid,
+                            cursor: deliveryFee === "loading" ? "not-allowed" : "pointer",
+                            opacity: deliveryFee === "loading" ? 0.6 : 1,
+                          }}
+                        >
+                          {deliveryFee === "loading" ? "Calculating…" : "Estimate delivery fee"}
+                        </button>
+                        {typeof deliveryFee === "number" && (
+                          <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: olive }}>
+                            ₱{deliveryFee} via Lalamove
+                          </span>
+                        )}
+                        {deliveryFee === "failed" && (
+                          <span style={{ fontSize: "0.75rem", color: muted }}>Could not estimate fee</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -903,21 +944,23 @@ export function MenuPage() {
                       </span>
                     </div>
                   ))}
-                  <div
-                    style={{
-                      borderTop: `1px solid ${creamDark}`,
-                      marginTop: "0.75rem",
-                      paddingTop: "0.75rem",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontWeight: 700,
-                      fontSize: "0.9375rem",
-                    }}
-                  >
-                    <span>Total</span>
-                    <span style={{ color: olive }}>
-                      ₱{total.toLocaleString()}
-                    </span>
+                  <div style={{ borderTop: `1px solid ${creamDark}`, marginTop: "0.75rem", paddingTop: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.375rem" }}>
+                      <span style={{ color: muted }}>Subtotal</span>
+                      <span>₱{total.toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                      <span style={{ color: muted }}>Delivery</span>
+                      <span style={{ color: typeof deliveryFee === "number" ? olive : muted }}>
+                        {typeof deliveryFee === "number" ? `₱${deliveryFee}` : "—"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "0.9375rem" }}>
+                      <span>Total</span>
+                      <span style={{ color: olive }}>
+                        ₱{(total + (typeof deliveryFee === "number" ? deliveryFee : 0)).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
