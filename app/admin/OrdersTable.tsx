@@ -1,8 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { type Order } from "@/lib/supabase";
-import { updateOrderStatus, deleteOrder } from "./actions";
+import { updateOrderStatus, deleteOrder, bulkUpdateStatus, bulkDelete } from "./actions";
 import { useRouter } from "next/navigation";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -17,18 +17,145 @@ const creamDark = "#D4C9A8";
 const creamLight = "#F8F4EA";
 const brownMid = "#6B3A1F";
 const muted = "#8B7355";
+const olive = "#7A7B1C";
+
+const BULK_STATUSES = ["confirmed", "fulfilled", "cancelled"] as const;
 
 export function OrdersTable({ orders }: { orders: Order[] }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const allSelected = orders.length > 0 && selected.size === orders.length;
+  const someSelected = selected.size > 0;
+
+  const toggleAll = () => {
+    if (allSelected) setSelected(new Set());
+    else setSelected(new Set(orders.map((o) => o.id)));
+  };
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkStatus = (status: string) => {
+    const ids = Array.from(selected);
+    startTransition(async () => {
+      await bulkUpdateStatus(ids, status);
+      setSelected(new Set());
+      router.refresh();
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (!confirm(`Delete ${selected.size} order(s)? This cannot be undone.`)) return;
+    const ids = Array.from(selected);
+    startTransition(async () => {
+      await bulkDelete(ids);
+      setSelected(new Set());
+      router.refresh();
+    });
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-      {orders.map((order) => (
-        <OrderCard key={order.id} order={order} />
-      ))}
+    <div>
+      {/* Bulk action bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.625rem",
+          marginBottom: "1rem",
+          flexWrap: "wrap",
+          minHeight: "2.25rem",
+        }}
+      >
+        {/* Select all checkbox */}
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", userSelect: "none" }}>
+          <input
+            type="checkbox"
+            checked={allSelected}
+            onChange={toggleAll}
+            style={{ width: "1rem", height: "1rem", accentColor: brown, cursor: "pointer" }}
+          />
+          <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: brownMid }}>
+            {someSelected ? `${selected.size} selected` : "Select all"}
+          </span>
+        </label>
+
+        {someSelected && (
+          <>
+            <div style={{ width: "1px", height: "1.25rem", backgroundColor: creamDark }} />
+            {BULK_STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => handleBulkStatus(s)}
+                disabled={isPending}
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  padding: "0.375rem 0.875rem",
+                  borderRadius: "9999px",
+                  border: `1.5px solid ${creamDark}`,
+                  backgroundColor: "transparent",
+                  color: brown,
+                  cursor: isPending ? "not-allowed" : "pointer",
+                  textTransform: "capitalize",
+                  opacity: isPending ? 0.5 : 1,
+                }}
+              >
+                {s}
+              </button>
+            ))}
+            <button
+              onClick={handleBulkDelete}
+              disabled={isPending}
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                padding: "0.375rem 0.875rem",
+                borderRadius: "9999px",
+                border: "1.5px solid #FCA5A5",
+                backgroundColor: "transparent",
+                color: "#991B1B",
+                cursor: isPending ? "not-allowed" : "pointer",
+                opacity: isPending ? 0.5 : 1,
+              }}
+            >
+              Delete
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Order cards */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+        {orders.map((order) => (
+          <OrderCard
+            key={order.id}
+            order={order}
+            selected={selected.has(order.id)}
+            onToggle={() => toggleOne(order.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({
+  order,
+  selected,
+  onToggle,
+}: {
+  order: Order;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -60,9 +187,10 @@ function OrderCard({ order }: { order: Order }) {
     <div
       style={{
         backgroundColor: creamLight,
-        border: `1.5px solid ${creamDark}`,
+        border: `1.5px solid ${selected ? brown : creamDark}`,
         borderRadius: "1rem",
         padding: "1.125rem",
+        transition: "border-color 0.15s ease",
       }}
     >
       {/* Top row */}
@@ -76,9 +204,17 @@ function OrderCard({ order }: { order: Order }) {
           flexWrap: "wrap",
         }}
       >
-        <div>
-          <div style={{ fontWeight: 700, fontSize: "0.9375rem" }}>{order.id}</div>
-          <div style={{ fontSize: "0.75rem", color: muted, marginTop: "0.125rem" }}>{date}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggle}
+            style={{ width: "1rem", height: "1rem", accentColor: brown, cursor: "pointer", flexShrink: 0, marginTop: "2px" }}
+          />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "0.9375rem" }}>{order.id}</div>
+            <div style={{ fontSize: "0.75rem", color: muted, marginTop: "0.125rem" }}>{date}</div>
+          </div>
         </div>
         <span
           style={{
@@ -158,11 +294,11 @@ function OrderCard({ order }: { order: Order }) {
           }}
         >
           <span>Total</span>
-          <span style={{ color: "#7A7B1C" }}>₱{order.total.toLocaleString()}</span>
+          <span style={{ color: olive }}>₱{order.total.toLocaleString()}</span>
         </div>
       </div>
 
-      {/* Status actions */}
+      {/* Per-card actions */}
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
         {(["pending", "confirmed", "fulfilled", "cancelled"] as const)
           .filter((s) => s !== order.status)
@@ -184,7 +320,7 @@ function OrderCard({ order }: { order: Order }) {
                 opacity: isPending ? 0.5 : 1,
               }}
             >
-              Mark {s}
+              {s}
             </button>
           ))}
         <button

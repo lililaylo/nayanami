@@ -26,3 +26,11 @@ export async function updateOrderStatus(orderId: string, status: string) {
 export async function deleteOrder(orderId: string) {
   await getSupabaseAdmin().from("orders").delete().eq("id", orderId);
 }
+
+export async function bulkUpdateStatus(orderIds: string[], status: string) {
+  await getSupabaseAdmin().from("orders").update({ status }).in("id", orderIds);
+}
+
+export async function bulkDelete(orderIds: string[]) {
+  await getSupabaseAdmin().from("orders").delete().in("id", orderIds);
+}
