@@ -47,6 +47,8 @@ export function MenuPage() {
     } else if (!form.address.toLowerCase().includes("pasig")) {
       e.address = "Sorry, we only deliver within Pasig City.";
     }
+    if (!form.social.trim()) e.social = "Social handle is required";
+    if (!form.paymentRef.trim()) e.paymentRef = "Payment reference is required";
     if (form.deliveryType === "scheduled") {
       if (!form.deliveryDate) e.deliveryDate = "Please select a date";
       if (!form.deliveryTime) e.deliveryTime = "Please select a time";
@@ -724,7 +726,7 @@ export function MenuPage() {
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem", color: brownMid }}>
-                      Social <span style={{ fontWeight: 400, color: muted }}>(for order updates)</span>
+                      Social *
                     </label>
                     <div style={{ display: "flex", backgroundColor: creamDark, borderRadius: "0.75rem", padding: "0.25rem", gap: "0.25rem", marginBottom: "0.625rem" }}>
                       {(["instagram", "tiktok"] as const).map((p) => (
@@ -764,16 +766,20 @@ export function MenuPage() {
                         </button>
                       ))}
                     </div>
-                    <div style={{ display: "flex", border: `1.5px solid ${creamDark}`, borderRadius: "0.75rem", overflow: "hidden", backgroundColor: creamLight }}>
+                    <div style={{ display: "flex", border: `1.5px solid ${errors.social ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", overflow: "hidden", backgroundColor: creamLight }}>
                       <span style={{ padding: "0.875rem 0.75rem 0.875rem 1rem", fontSize: "0.9375rem", color: muted, flexShrink: 0, borderRight: `1px solid ${creamDark}` }}>@</span>
                       <input
                         type="text"
                         value={form.social}
-                        onChange={(e) => setForm((f) => ({ ...f, social: e.target.value.replace(/^@/, "") }))}
+                        onChange={(e) => {
+                          setForm((f) => ({ ...f, social: e.target.value.replace(/^@/, "") }));
+                          if (errors.social) setErrors((er) => ({ ...er, social: "" }));
+                        }}
                         placeholder="yourhandle"
                         style={{ flex: 1, padding: "0.875rem 1rem", border: "none", fontSize: "0.9375rem", backgroundColor: "transparent", color: brown, outline: "none" }}
                       />
                     </div>
+                    {errors.social && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.social}</p>}
                   </div>
 
                   <div>
@@ -939,15 +945,19 @@ export function MenuPage() {
                   </p>
                   <div style={{ marginTop: "0.875rem" }}>
                     <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: muted, marginBottom: "0.375rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      Payment Reference <span style={{ fontWeight: 400 }}>(optional)</span>
+                      Payment Reference *
                     </label>
                     <input
                       type="text"
                       value={form.paymentRef}
-                      onChange={(e) => setForm((f) => ({ ...f, paymentRef: e.target.value }))}
+                      onChange={(e) => {
+                        setForm((f) => ({ ...f, paymentRef: e.target.value }));
+                        if (errors.paymentRef) setErrors((er) => ({ ...er, paymentRef: "" }));
+                      }}
                       placeholder="Last 4 digits or transaction ref"
-                      style={{ width: "100%", padding: "0.75rem 1rem", border: `1.5px solid ${creamDark}`, borderRadius: "0.75rem", fontSize: "0.875rem", backgroundColor: cream, color: brown, boxSizing: "border-box" }}
+                      style={{ width: "100%", padding: "0.75rem 1rem", border: `1.5px solid ${errors.paymentRef ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.875rem", backgroundColor: cream, color: brown, boxSizing: "border-box" }}
                     />
+                    {errors.paymentRef && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.paymentRef}</p>}
                   </div>
                 </div>
 

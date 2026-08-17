@@ -51,7 +51,7 @@ export async function submitOrder(formData: FormData) {
         Priority: "high",
         Tags: "green_circle",
       },
-      body: `${itemSummary}\n₱${total} · ${when}\n${address}`,
+      body: `${itemSummary}\n₱${total} · ${when}\n${address}${social ? `\n@${social}` : ""}${paymentRef ? `\nRef: ${paymentRef}` : ""}`,
     }).catch(() => {});
   }
 
