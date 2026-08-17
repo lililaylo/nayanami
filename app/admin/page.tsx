@@ -75,7 +75,13 @@ export default async function AdminPage() {
           <OrdersTable orders={orders} />
         ) : (
           <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#8B7355" }}>
-            <p style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🍵</p>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8B7355" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: "0 auto 0.875rem", display: "block" }}>
+              <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+              <line x1="6" y1="2" x2="6" y2="4" />
+              <line x1="10" y1="2" x2="10" y2="4" />
+              <line x1="14" y1="2" x2="14" y2="4" />
+            </svg>
             <p>No orders yet. Share your link to get started!</p>
           </div>
         )}
