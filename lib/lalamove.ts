@@ -1,11 +1,27 @@
-import crypto from "crypto";
+// Distance-based delivery fee estimation — no external API key needed
+// Pickup: East Ortigas Mansions, C. Raymundo Ave, Pasig City
+const PICKUP_LAT = 14.5761;
+const PICKUP_LNG = 121.0607;
 
-// East Ortigas Mansions, C. Raymundo Ave, Pasig City
-const PICKUP_LAT = "14.576100";
-const PICKUP_LNG = "121.060700";
-const PICKUP_ADDRESS = "East Ortigas Mansions, C. Raymundo Avenue, Pasig City";
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-async function geocode(address: string): Promise<{ lat: string; lng: string } | null> {
+function estimateFare(km: number): number {
+  const base = 70;
+  const perKm = 12;
+  // Round up to nearest ₱5
+  return Math.ceil((base + km * perKm) / 5) * 5;
+}
+
+async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const query = encodeURIComponent(`${address}, Philippines`);
     const res = await fetch(
@@ -14,62 +30,15 @@ async function geocode(address: string): Promise<{ lat: string; lng: string } | 
     );
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) return null;
-    return { lat: data[0].lat, lng: data[0].lon };
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
   } catch {
     return null;
   }
 }
 
 export async function getDeliveryFee(deliveryAddress: string): Promise<number | null> {
-  const apiKey = process.env.LALAMOVE_API_KEY;
-  const apiSecret = process.env.LALAMOVE_API_SECRET;
-  if (!apiKey || !apiSecret) return null;
-
-  const dropCoords = await geocode(deliveryAddress);
-  if (!dropCoords) return null;
-
-  const method = "POST";
-  const path = "/v3/quotations";
-  const timestamp = Date.now().toString();
-
-  const body = JSON.stringify({
-    data: {
-      serviceType: "MOTORCYCLE",
-      language: "en_PH",
-      stops: [
-        {
-          coordinates: { lat: PICKUP_LAT, lng: PICKUP_LNG },
-          address: PICKUP_ADDRESS,
-        },
-        {
-          coordinates: { lat: dropCoords.lat, lng: dropCoords.lng },
-          address: deliveryAddress,
-        },
-      ],
-    },
-  });
-
-  const rawSignature = `${timestamp}\r\n${method}\r\n${path}\r\n\r\n${body}`;
-  const signature = crypto.createHmac("sha256", apiSecret).update(rawSignature).digest("hex");
-
-  try {
-    const res = await fetch(`https://rest.lalamove.com${path}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `hmac ${apiKey}:${timestamp}:${signature}`,
-        Market: "PH",
-        "Request-ID": crypto.randomUUID(),
-      },
-      body,
-    });
-
-    if (!res.ok) return null;
-    const json = await res.json();
-    const total = json?.priceBreakdown?.total;
-    if (!total) return null;
-    return Math.ceil(parseFloat(total));
-  } catch {
-    return null;
-  }
+  const coords = await geocode(deliveryAddress);
+  if (!coords) return null;
+  const km = haversineKm(PICKUP_LAT, PICKUP_LNG, coords.lat, coords.lng);
+  return estimateFare(km);
 }

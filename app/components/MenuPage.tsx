@@ -755,7 +755,7 @@ export function MenuPage() {
                         </button>
                         {typeof deliveryFee === "number" && (
                           <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: olive }}>
-                            ₱{deliveryFee} via Lalamove
+                            ~₱{deliveryFee} estimated
                           </span>
                         )}
                         {deliveryFee === "failed" && (
@@ -952,7 +952,7 @@ export function MenuPage() {
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
                       <span style={{ color: muted }}>Delivery</span>
                       <span style={{ color: typeof deliveryFee === "number" ? olive : muted }}>
-                        {typeof deliveryFee === "number" ? `₱${deliveryFee}` : "—"}
+                        {typeof deliveryFee === "number" ? `~₱${deliveryFee}` : "—"}
                       </span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "0.9375rem" }}>
