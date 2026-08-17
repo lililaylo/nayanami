@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { menuItems, type MenuItem } from "@/lib/menu";
-import { submitOrder, fetchDeliveryQuoteFromBarangay } from "@/app/actions";
+import { submitOrder, fetchDeliveryQuoteFromBarangay, checkOrderLimit } from "@/app/actions";
 
 type CartItem = { id: string; name: string; price: number; quantity: number };
 type Category = "All" | "Matcha" | "Hojicha";
@@ -46,6 +46,7 @@ export function MenuPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deliveryFee, setDeliveryFee] = useState<number | null | "loading" | "failed">(null);
+  const [slots, setSlots] = useState<{ available: boolean; remaining: number } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const validate = () => {
@@ -109,6 +110,7 @@ export function MenuPage() {
   const openCart = () => {
     setStep("cart");
     setShowOverlay(true);
+    checkOrderLimit().then(setSlots);
   };
 
   const canSubmit = !isPending;
@@ -615,23 +617,37 @@ export function MenuPage() {
                   + Add more items
                 </button>
 
-                <button
-                  onClick={() => setStep("form")}
-                  style={{
-                    width: "100%",
-                    padding: "1rem",
-                    backgroundColor: brown,
-                    color: cream,
-                    border: "none",
-                    borderRadius: "0.875rem",
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    marginTop: "0.5rem",
-                  }}
-                >
-                  Continue to checkout →
-                </button>
+                {slots && !slots.available ? (
+                  <div style={{ textAlign: "center", padding: "1rem", backgroundColor: "#FEE2E2", borderRadius: "0.875rem" }}>
+                    <div style={{ fontWeight: 700, color: "#991B1B", marginBottom: "0.25rem" }}>We're fully booked for today</div>
+                    <div style={{ fontSize: "0.8125rem", color: "#B91C1C" }}>All 10 order slots have been taken. Check back tomorrow!</div>
+                  </div>
+                ) : (
+                  <>
+                    {slots && slots.available && slots.remaining <= 3 && (
+                      <div style={{ textAlign: "center", fontSize: "0.8125rem", color: "#92400E", fontWeight: 600, marginBottom: "0.5rem" }}>
+                        Only {slots.remaining} slot{slots.remaining !== 1 ? "s" : ""} left today!
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setStep("form")}
+                      style={{
+                        width: "100%",
+                        padding: "1rem",
+                        backgroundColor: brown,
+                        color: cream,
+                        border: "none",
+                        borderRadius: "0.875rem",
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        marginTop: "0.5rem",
+                      }}
+                    >
+                      Continue to checkout →
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <>
