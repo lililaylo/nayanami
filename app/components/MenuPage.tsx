@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { menuItems, type MenuItem } from "@/lib/menu";
-import { submitOrder, fetchDeliveryQuote } from "@/app/actions";
+import { submitOrder, fetchDeliveryQuote, fetchDeliveryQuoteFromCoords, getAddressSuggestions } from "@/app/actions";
 
 type CartItem = { id: string; name: string; price: number; quantity: number };
 type Category = "All" | "Matcha" | "Hojicha";
@@ -46,6 +46,7 @@ export function MenuPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deliveryFee, setDeliveryFee] = useState<number | null | "loading" | "failed">(null);
+  const [streetCoords, setStreetCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const validate = () => {
@@ -71,6 +72,12 @@ export function MenuPage() {
       return;
     }
     setDeliveryFee("loading");
+    if (streetCoords) {
+      fetchDeliveryQuoteFromCoords(streetCoords.lat, streetCoords.lng).then((fee) => {
+        setDeliveryFee(fee);
+      });
+      return;
+    }
     const timer = setTimeout(() => {
       const fullAddress = `${form.street.trim()}, ${form.barangay}, Pasig City`;
       fetchDeliveryQuote(fullAddress).then((fee) => {
@@ -78,7 +85,7 @@ export function MenuPage() {
       });
     }, 800);
     return () => clearTimeout(timer);
-  }, [form.street, form.barangay]);
+  }, [form.street, form.barangay, streetCoords]);
 
   const filtered =
     category === "All"
@@ -722,21 +729,19 @@ export function MenuPage() {
                     {errors.phone && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.phone}</p>}
                   </div>
 
-                  {/* House/Street */}
+                  {/* House/Street autocomplete */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
                       House/Unit No. & Street *
                     </label>
-                    <input
-                      type="text"
+                    <AddressAutocomplete
                       value={form.street}
-                      onChange={(e) => {
-                        setForm((f) => ({ ...f, street: e.target.value }));
+                      onChange={(street, coords) => {
+                        setForm((f) => ({ ...f, street }));
+                        setStreetCoords(coords);
                         if (errors.street) setErrors((er) => ({ ...er, street: "" }));
                       }}
-                      placeholder="e.g. 23 Kalayaan St."
-                      autoComplete="address-line1"
-                      style={{ width: "100%", padding: "0.875rem 1rem", border: `1.5px solid ${errors.street ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.9375rem", backgroundColor: creamLight, color: brown, boxSizing: "border-box" }}
+                      hasError={!!errors.street}
                     />
                     {errors.street && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.street}</p>}
                   </div>
@@ -1207,6 +1212,115 @@ function CustomDatePicker({
               );
             })}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddressAutocomplete({
+  value,
+  onChange,
+  hasError,
+}: {
+  value: string;
+  onChange: (street: string, coords: { lat: number; lng: number } | null) => void;
+  hasError?: boolean;
+}) {
+  const [suggestions, setSuggestions] = useState<Array<{ id: string; label: string; lat: number; lng: number }>>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (value.length < 3) { setSuggestions([]); setOpen(false); return; }
+    setLoading(true);
+    const timer = setTimeout(() => {
+      getAddressSuggestions(value).then((results) => {
+        setSuggestions(results);
+        setOpen(results.length > 0);
+        setLoading(false);
+      });
+    }, 450);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
+      <div style={{ position: "relative" }}>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value, null)}
+          placeholder="e.g. 23 Kalayaan St."
+          autoComplete="off"
+          style={{
+            width: "100%",
+            padding: "0.875rem 2.5rem 0.875rem 1rem",
+            border: `1.5px solid ${hasError ? "#c0392b" : creamDark}`,
+            borderRadius: "0.75rem",
+            fontSize: "0.9375rem",
+            backgroundColor: creamLight,
+            color: brown,
+            boxSizing: "border-box",
+          }}
+        />
+        {loading && (
+          <span style={{ position: "absolute", right: "0.875rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: muted }}>…</span>
+        )}
+      </div>
+
+      {open && suggestions.length > 0 && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          backgroundColor: creamLight,
+          border: `1.5px solid ${creamDark}`,
+          borderRadius: "0.75rem",
+          zIndex: 100,
+          boxShadow: "0 4px 16px rgba(61,26,8,0.12)",
+          overflow: "hidden",
+          maxHeight: "220px",
+          overflowY: "auto",
+        }}>
+          {suggestions.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onMouseEnter={() => setHovered(s.id)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={() => {
+                onChange(s.label.split(", ").slice(0, 2).join(", "), { lat: s.lat, lng: s.lng });
+                setOpen(false);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "0.75rem 1rem",
+                fontSize: "0.8125rem",
+                textAlign: "left",
+                border: "none",
+                cursor: "pointer",
+                backgroundColor: hovered === s.id ? brown : "transparent",
+                color: hovered === s.id ? cream : brown,
+                lineHeight: 1.4,
+                transition: "background-color 0.1s ease",
+              }}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       )}
     </div>
