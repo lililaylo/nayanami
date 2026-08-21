@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { type Order } from "@/lib/supabase";
-import { updateOrderStatus, deleteOrder, bulkUpdateStatus, bulkDelete } from "./actions";
+import { markOrderPaid, updateOrderStatus, deleteOrder, bulkUpdateStatus, bulkDelete } from "./actions";
 import { useRouter } from "next/navigation";
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -71,18 +71,17 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
           gap: "0.625rem",
           marginBottom: "1rem",
           flexWrap: "wrap",
-          minHeight: "2.25rem",
+          minHeight: "2.75rem",
         }}
       >
-        {/* Select all checkbox */}
-        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", userSelect: "none" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.625rem", cursor: "pointer", userSelect: "none", minHeight: "44px" }}>
           <input
             type="checkbox"
             checked={allSelected}
             onChange={toggleAll}
-            style={{ width: "1rem", height: "1rem", accentColor: brown, cursor: "pointer" }}
+            style={{ width: "1.125rem", height: "1.125rem", accentColor: brown, cursor: "pointer" }}
           />
-          <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: brownMid }}>
+          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: brownMid }}>
             {someSelected ? `${selected.size} selected` : "Select all"}
           </span>
         </label>
@@ -96,9 +95,10 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                 onClick={() => handleBulkStatus(s)}
                 disabled={isPending}
                 style={{
-                  fontSize: "0.75rem",
+                  fontSize: "0.8125rem",
                   fontWeight: 600,
-                  padding: "0.375rem 0.875rem",
+                  padding: "0.5rem 1rem",
+                  minHeight: "44px",
                   borderRadius: "9999px",
                   border: `1.5px solid ${creamDark}`,
                   backgroundColor: "transparent",
@@ -115,9 +115,10 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
               onClick={handleBulkDelete}
               disabled={isPending}
               style={{
-                fontSize: "0.75rem",
+                fontSize: "0.8125rem",
                 fontWeight: 600,
-                padding: "0.375rem 0.875rem",
+                padding: "0.5rem 1rem",
+                minHeight: "44px",
                 borderRadius: "9999px",
                 border: "1.5px solid #FCA5A5",
                 backgroundColor: "transparent",
@@ -133,7 +134,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
       </div>
 
       {/* Order cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {orders.map((order) => (
           <OrderCard
             key={order.id}
@@ -159,6 +160,13 @@ function OrderCard({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+  const handleMarkPaid = () => {
+    startTransition(async () => {
+      await markOrderPaid(order.id);
+      router.refresh();
+    });
+  };
+
   const handleStatus = (status: string) => {
     startTransition(async () => {
       await updateOrderStatus(order.id, status);
@@ -175,6 +183,21 @@ function OrderCard({
   };
 
   const badge = STATUS_COLORS[order.status] ?? STATUS_COLORS.pending;
+  const isPaid = order.payment_status === "paid";
+
+  const social = order.social;
+  let socialDisplay = "";
+  if (social) {
+    const idx = social.indexOf(":");
+    if (idx !== -1) {
+      const platform = social.slice(0, idx);
+      const handle = social.slice(idx + 1);
+      socialDisplay = `${platform === "instagram" ? "IG" : "TT"}: @${handle}`;
+    } else {
+      socialDisplay = `@${social}`;
+    }
+  }
+
   const date = new Date(order.created_at).toLocaleString("en-PH", {
     month: "short",
     day: "numeric",
@@ -183,88 +206,86 @@ function OrderCard({
     hour12: true,
   });
 
+  const deliveryLabel =
+    order.delivery_type === "now"
+      ? "ASAP"
+      : `${order.delivery_date ?? ""} · ${order.delivery_time ?? ""}`;
+
   return (
     <div
       style={{
         backgroundColor: creamLight,
-        border: `1.5px solid ${selected ? brown : creamDark}`,
+        border: `2px solid ${selected ? brown : isPaid ? "#86EFAC" : creamDark}`,
         borderRadius: "1rem",
-        padding: "1.125rem",
+        overflow: "hidden",
         transition: "border-color 0.15s ease",
+        opacity: isPending ? 0.6 : 1,
       }}
     >
-      {/* Top row */}
+      {/* Card header */}
       <div
         style={{
+          padding: "0.875rem 1rem",
           display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
+          alignItems: "center",
           gap: "0.75rem",
-          marginBottom: "0.875rem",
-          flexWrap: "wrap",
+          borderBottom: `1px solid ${creamDark}`,
+          backgroundColor: selected ? "#FDF8F0" : creamLight,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={onToggle}
-            style={{ width: "1rem", height: "1rem", accentColor: brown, cursor: "pointer", flexShrink: 0, marginTop: "2px" }}
-          />
-          <div>
-            <div style={{ fontWeight: 700, fontSize: "0.9375rem" }}>{order.id}</div>
-            <div style={{ fontSize: "0.75rem", color: muted, marginTop: "0.125rem" }}>{date}</div>
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggle}
+          style={{ width: "1.125rem", height: "1.125rem", accentColor: brown, cursor: "pointer", flexShrink: 0 }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: "0.9375rem", fontFamily: "monospace", letterSpacing: "0.02em" }}>
+            {order.id}
           </div>
+          <div style={{ fontSize: "0.75rem", color: muted, marginTop: "0.125rem" }}>{date}</div>
         </div>
-        <span
-          style={{
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            textTransform: "capitalize",
-            padding: "0.25rem 0.75rem",
-            borderRadius: "9999px",
-            backgroundColor: badge.bg,
-            color: badge.color,
-            flexShrink: 0,
-          }}
-        >
-          {order.status}
-        </span>
+        {/* Status badges */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem", flexShrink: 0 }}>
+          <span
+            style={{
+              fontSize: "0.6875rem",
+              fontWeight: 700,
+              textTransform: "capitalize",
+              padding: "0.2rem 0.625rem",
+              borderRadius: "9999px",
+              backgroundColor: badge.bg,
+              color: badge.color,
+            }}
+          >
+            {order.status}
+          </span>
+          <span
+            style={{
+              fontSize: "0.6875rem",
+              fontWeight: 700,
+              padding: "0.2rem 0.625rem",
+              borderRadius: "9999px",
+              backgroundColor: isPaid ? "#D1FAE5" : "#FEF3C7",
+              color: isPaid ? "#065F46" : "#92400E",
+            }}
+          >
+            {isPaid ? "paid" : "unpaid"}
+          </span>
+        </div>
       </div>
 
       {/* Customer info */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-          gap: "0.375rem",
-          marginBottom: "0.875rem",
-          fontSize: "0.875rem",
-        }}
-      >
-        <Info label="Name" value={order.customer_name} />
-        <Info label="Phone" value={order.phone} />
-        <Info label="Address" value={order.address} />
-        {order.paymongo_session_id && <Info label="PayMongo" value={order.paymongo_session_id} />}
-        {order.social && <Info label="Social" value={`@${order.social}`} />}
-        <Info
-          label="Delivery"
-          value={
-            order.delivery_type === "now"
-              ? "ASAP"
-              : `${order.delivery_date ?? ""} ${order.delivery_time ?? ""}`
-          }
-        />
+      <div style={{ padding: "0.875rem 1rem", borderBottom: `1px solid ${creamDark}` }}>
+        <InfoRow icon="👤" value={order.customer_name} bold />
+        <InfoRow icon="📱" value={order.phone} />
+        <InfoRow icon="📍" value={order.address} />
+        {socialDisplay && <InfoRow icon="💬" value={socialDisplay} />}
+        <InfoRow icon="🕐" value={deliveryLabel} />
       </div>
 
       {/* Items */}
-      <div
-        style={{
-          borderTop: `1px solid ${creamDark}`,
-          paddingTop: "0.875rem",
-          marginBottom: "0.875rem",
-        }}
-      >
+      <div style={{ padding: "0.875rem 1rem", borderBottom: `1px solid ${creamDark}` }}>
         {order.items.map((item) => (
           <div
             key={item.id}
@@ -272,22 +293,26 @@ function OrderCard({
               display: "flex",
               justifyContent: "space-between",
               fontSize: "0.875rem",
-              marginBottom: "0.25rem",
+              marginBottom: "0.3rem",
               gap: "0.5rem",
             }}
           >
             <span style={{ color: brownMid }}>{item.quantity}× {item.name}</span>
-            <span style={{ fontWeight: 600, flexShrink: 0 }}>
-              ₱{(item.price * item.quantity).toLocaleString()}
-            </span>
+            <span style={{ fontWeight: 600, flexShrink: 0 }}>₱{(item.price * item.quantity).toLocaleString()}</span>
           </div>
         ))}
+        {order.delivery_fee != null && order.delivery_fee > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.3rem", color: muted }}>
+            <span>Delivery fee</span>
+            <span>₱{order.delivery_fee.toLocaleString()}</span>
+          </div>
+        )}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             fontWeight: 700,
-            fontSize: "0.9375rem",
+            fontSize: "1rem",
             marginTop: "0.5rem",
             paddingTop: "0.5rem",
             borderTop: `1px solid ${creamDark}`,
@@ -298,59 +323,96 @@ function OrderCard({
         </div>
       </div>
 
-      {/* Per-card actions */}
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-        {(["pending", "confirmed", "fulfilled", "cancelled"] as const)
-          .filter((s) => s !== order.status)
-          .map((s) => (
-            <button
-              key={s}
-              onClick={() => handleStatus(s)}
-              disabled={isPending}
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                padding: "0.375rem 0.875rem",
-                borderRadius: "9999px",
-                border: `1.5px solid ${creamDark}`,
-                backgroundColor: "transparent",
-                color: brown,
-                cursor: isPending ? "not-allowed" : "pointer",
-                textTransform: "capitalize",
-                opacity: isPending ? 0.5 : 1,
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        <button
-          onClick={handleDelete}
-          disabled={isPending}
-          style={{
-            marginLeft: "auto",
-            fontSize: "0.75rem",
-            fontWeight: 600,
-            padding: "0.375rem 0.875rem",
-            borderRadius: "9999px",
-            border: "1.5px solid #FCA5A5",
-            backgroundColor: "transparent",
-            color: "#991B1B",
-            cursor: isPending ? "not-allowed" : "pointer",
-            opacity: isPending ? 0.5 : 1,
-          }}
-        >
-          Delete
-        </button>
+      {/* Actions */}
+      <div style={{ padding: "0.875rem 1rem", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+        {/* Mark Paid — only shown when unpaid */}
+        {!isPaid && (
+          <button
+            onClick={handleMarkPaid}
+            disabled={isPending}
+            style={{
+              width: "100%",
+              padding: "0.875rem",
+              minHeight: "48px",
+              borderRadius: "0.75rem",
+              border: "none",
+              backgroundColor: "#16A34A",
+              color: "#fff",
+              fontSize: "0.9375rem",
+              fontWeight: 700,
+              cursor: isPending ? "not-allowed" : "pointer",
+              opacity: isPending ? 0.6 : 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {isPending ? "Saving…" : "Mark as Paid"}
+          </button>
+        )}
+
+        {/* Status buttons */}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          {(["pending", "confirmed", "fulfilled", "cancelled"] as const)
+            .filter((s) => s !== order.status)
+            .map((s) => (
+              <button
+                key={s}
+                onClick={() => handleStatus(s)}
+                disabled={isPending}
+                style={{
+                  fontSize: "0.8125rem",
+                  fontWeight: 600,
+                  padding: "0.5rem 0.875rem",
+                  minHeight: "40px",
+                  borderRadius: "9999px",
+                  border: `1.5px solid ${creamDark}`,
+                  backgroundColor: "transparent",
+                  color: brownMid,
+                  cursor: isPending ? "not-allowed" : "pointer",
+                  textTransform: "capitalize",
+                  opacity: isPending ? 0.5 : 1,
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          <button
+            onClick={handleDelete}
+            disabled={isPending}
+            style={{
+              marginLeft: "auto",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              padding: "0.5rem 0.875rem",
+              minHeight: "40px",
+              borderRadius: "9999px",
+              border: "1.5px solid #FCA5A5",
+              backgroundColor: "transparent",
+              color: "#991B1B",
+              cursor: isPending ? "not-allowed" : "pointer",
+              opacity: isPending ? 0.5 : 1,
+            }}
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function InfoRow({ icon, value, bold }: { icon: string; value: string; bold?: boolean }) {
   return (
-    <div>
-      <span style={{ color: muted, fontSize: "0.75rem" }}>{label}: </span>
-      <span style={{ fontWeight: 500 }}>{value}</span>
+    <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem", marginBottom: "0.375rem", alignItems: "flex-start" }}>
+      <span style={{ flexShrink: 0, lineHeight: 1.5 }}>{icon}</span>
+      <span style={{ fontWeight: bold ? 700 : 400, color: bold ? brown : brownMid, lineHeight: 1.5, wordBreak: "break-word" }}>
+        {value}
+      </span>
     </div>
   );
 }

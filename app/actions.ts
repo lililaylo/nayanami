@@ -95,7 +95,7 @@ export async function submitOrder(formData: FormData) {
         Priority: "high",
         Tags: "orange_circle",
       },
-      body: `${itemSummary}\n₱${total} · ${when}\n${address}\n+63${phone}${social ? `\n${socialPlatform === "instagram" ? "IG" : "TT"}: @${social}` : ""}`,
+      body: `${itemSummary}\n₱${total} · ${when}\n${address}\n+63${phone}${social ? `\n${socialPlatform === "instagram" ? "IG" : "TT"}: @${social}` : ""}\nAwaiting payment`,
     }).catch(() => {});
   }
 

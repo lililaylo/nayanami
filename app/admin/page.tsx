@@ -23,6 +23,7 @@ export default async function AdminPage() {
   const olive = "#7A7B1C";
 
   const pending = orders?.filter((o) => o.status === "pending").length ?? 0;
+  const unpaid = orders?.filter((o) => o.payment_status === "unpaid" && o.status !== "cancelled").length ?? 0;
 
   return (
     <div
@@ -36,41 +37,78 @@ export default async function AdminPage() {
       {/* Header */}
       <header
         style={{
-          padding: "1.25rem 1.5rem",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          backgroundColor: cream,
+          padding: "0.875rem 1rem",
           borderBottom: `1px solid ${creamDark}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          flexWrap: "wrap",
           gap: "0.75rem",
         }}
       >
-        <div>
-          <div>
-            <img src="/logo.png" alt="Nayanami" style={{ height: "36px", width: "auto", display: "block", marginBottom: "0.25rem" }} />
-            <p style={{ color: "#8B7355", fontSize: "0.75rem", margin: 0 }}>
-              Orders dashboard
-            </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+          <img src="/logo.png" alt="Nayanami" style={{ height: "32px", width: "auto" }} />
+          <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
+            {unpaid > 0 && (
+              <span
+                style={{
+                  backgroundColor: "#FEF3C7",
+                  color: "#92400E",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  padding: "0.25rem 0.625rem",
+                  borderRadius: "9999px",
+                  border: "1.5px solid #FDE68A",
+                }}
+              >
+                {unpaid} unpaid
+              </span>
+            )}
+            {pending > 0 && (
+              <span
+                style={{
+                  backgroundColor: olive,
+                  color: "#fff",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  padding: "0.25rem 0.625rem",
+                  borderRadius: "9999px",
+                }}
+              >
+                {pending} pending
+              </span>
+            )}
           </div>
         </div>
-        {pending > 0 && (
-          <div
-            style={{
-              backgroundColor: olive,
-              color: "#fff",
-              fontSize: "0.8125rem",
-              fontWeight: 700,
-              padding: "0.375rem 0.875rem",
-              borderRadius: "9999px",
-            }}
-          >
-            {pending} new order{pending !== 1 ? "s" : ""}
-          </div>
-        )}
+        {/* Refresh link */}
+        <a
+          href="/admin"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "40px",
+            height: "40px",
+            borderRadius: "9999px",
+            border: `1.5px solid ${creamDark}`,
+            color: brown,
+            textDecoration: "none",
+            flexShrink: 0,
+          }}
+          aria-label="Refresh"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={brown} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </a>
       </header>
 
       {/* Orders */}
-      <main style={{ padding: "1.5rem" }}>
+      <main style={{ padding: "1rem" }}>
         {orders && orders.length > 0 ? (
           <OrdersTable orders={orders} />
         ) : (
