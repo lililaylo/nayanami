@@ -21,17 +21,35 @@ const olive = "#7A7B1C";
 
 const BULK_STATUSES = ["confirmed", "fulfilled", "cancelled"] as const;
 
+type Filter = "all" | "awaiting" | "paid" | "fulfilled";
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "all",      label: "All" },
+  { key: "awaiting", label: "Awaiting payment" },
+  { key: "paid",     label: "Paid" },
+  { key: "fulfilled",label: "Fulfilled" },
+];
+
+function applyFilter(orders: Order[], filter: Filter): Order[] {
+  if (filter === "awaiting") return orders.filter((o) => o.payment_status === "unpaid" && o.status !== "cancelled");
+  if (filter === "paid")     return orders.filter((o) => o.payment_status === "paid" && o.status !== "fulfilled");
+  if (filter === "fulfilled") return orders.filter((o) => o.status === "fulfilled");
+  return orders;
+}
+
 export function OrdersTable({ orders }: { orders: Order[] }) {
+  const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  const allSelected = orders.length > 0 && selected.size === orders.length;
+  const visible = applyFilter(orders, filter);
+  const allSelected = visible.length > 0 && selected.size === visible.length;
   const someSelected = selected.size > 0;
 
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
-    else setSelected(new Set(orders.map((o) => o.id)));
+    else setSelected(new Set(visible.map((o) => o.id)));
   };
 
   const toggleOne = (id: string) => {
@@ -61,8 +79,66 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
     });
   };
 
+  const counts: Record<Filter, number> = {
+    all:       orders.length,
+    awaiting:  applyFilter(orders, "awaiting").length,
+    paid:      applyFilter(orders, "paid").length,
+    fulfilled: applyFilter(orders, "fulfilled").length,
+  };
+
   return (
     <div>
+      {/* Filter tabs */}
+      <div
+        style={{
+          display: "flex",
+          gap: "0.375rem",
+          marginBottom: "1rem",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          paddingBottom: "2px",
+        }}
+      >
+        {FILTERS.map(({ key, label }) => {
+          const active = filter === key;
+          return (
+            <button
+              key={key}
+              onClick={() => { setFilter(key); setSelected(new Set()); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.375rem",
+                padding: "0.5rem 0.875rem",
+                borderRadius: "9999px",
+                border: `1.5px solid ${active ? brown : creamDark}`,
+                backgroundColor: active ? brown : "transparent",
+                color: active ? "#EDE8D5" : brownMid,
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {label}
+              <span
+                style={{
+                  fontSize: "0.6875rem",
+                  fontWeight: 700,
+                  padding: "0.1rem 0.4rem",
+                  borderRadius: "9999px",
+                  backgroundColor: active ? "rgba(255,255,255,0.2)" : creamDark,
+                  color: active ? "#EDE8D5" : muted,
+                }}
+              >
+                {counts[key]}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Bulk action bar */}
       <div
         style={{
@@ -134,16 +210,22 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
       </div>
 
       {/* Order cards */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {orders.map((order) => (
-          <OrderCard
-            key={order.id}
-            order={order}
-            selected={selected.has(order.id)}
-            onToggle={() => toggleOne(order.id)}
-          />
-        ))}
-      </div>
+      {visible.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem 1rem", color: muted, fontSize: "0.9rem" }}>
+          No orders in this category.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {visible.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              selected={selected.has(order.id)}
+              onToggle={() => toggleOne(order.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
