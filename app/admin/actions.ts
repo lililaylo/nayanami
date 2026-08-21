@@ -48,11 +48,11 @@ export async function markOrderPaid(orderId: string) {
     await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
       method: "POST",
       headers: {
-        Title: `✅ PAID [${orderId}] – ${order.customer_name}`,
+        Title: `PAID [${orderId}] - ${order.customer_name}`,
         Priority: "urgent",
-        Tags: "green_circle",
+        Tags: "white_check_mark,green_circle",
       },
-      body: `${itemSummary}\n₱${order.total} · ${when}\n${order.address}\n${order.phone}${socialLine}`,
+      body: `${itemSummary}\n₱${order.total} - ${when}\n${order.address}\n${order.phone}${socialLine}`,
     }).catch((err) => console.error("ntfy send failed:", err));
   }
 }
