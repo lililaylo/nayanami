@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSupabaseAdmin, type Order } from "@/lib/supabase";
 
-const IG_HANDLE = "nayanami.ph";
+const IG_HANDLE = "nayanamimatcha";
 
 export default async function SuccessPage({
   searchParams,
@@ -148,7 +148,7 @@ export default async function SuccessPage({
             ₱{order.total.toLocaleString()}
           </div>
           <div style={{ fontSize: "0.75rem", color: muted }}>
-            GCash · Maya · InstaPay
+            via InstaPay
           </div>
         </div>
 
