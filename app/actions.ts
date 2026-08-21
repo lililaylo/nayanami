@@ -3,8 +3,18 @@
 import { redirect } from "next/navigation";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import { getDeliveryFeeForBarangay } from "@/lib/lalamove";
+import { createCheckoutSession } from "@/lib/paymongo";
 
 const ORDER_LIMIT = 10;
+
+function getPHTHour(): number {
+  return (new Date().getUTCHours() + 8) % 24;
+}
+
+function isWithinOrderingHours(): boolean {
+  const h = getPHTHour();
+  return (h >= 10 && h < 14) || (h >= 19 && h < 21);
+}
 
 export async function fetchDeliveryQuoteFromBarangay(barangay: string): Promise<number | null> {
   return getDeliveryFeeForBarangay(barangay);
@@ -38,7 +48,6 @@ export async function submitOrder(formData: FormData) {
   const deliveryType = formData.get("deliveryType") as string;
   const deliveryDate = formData.get("deliveryDate") as string;
   const deliveryTime = formData.get("deliveryTime") as string;
-  const paymentRef = (formData.get("paymentRef") as string | null)?.trim() || null;
   const deliveryFee = parseInt(formData.get("deliveryFee") as string) || 0;
   const items = JSON.parse(formData.get("items") as string);
   const itemsTotal = parseInt(formData.get("total") as string);
@@ -50,6 +59,10 @@ export async function submitOrder(formData: FormData) {
 
   const limit = await checkOrderLimit();
   if (!limit.available) throw new Error("ORDERS_FULL");
+
+  if (deliveryType === "now" && !isWithinOrderingHours()) {
+    throw new Error("OUTSIDE_ORDERING_HOURS");
+  }
 
   const orderId = `NYM-${Date.now().toString(36).toUpperCase()}`;
 
@@ -65,7 +78,7 @@ export async function submitOrder(formData: FormData) {
     items,
     total,
     delivery_fee: deliveryFee || null,
-    payment_ref: paymentRef,
+    payment_status: "unpaid",
   });
 
   if (error) throw new Error(error.message);
@@ -79,13 +92,30 @@ export async function submitOrder(formData: FormData) {
     await fetch(`https://ntfy.sh/${process.env.NTFY_TOPIC}`, {
       method: "POST",
       headers: {
-        Title: `New order from ${name}`,
+        Title: `New order [${orderId}] from ${name}`,
         Priority: "high",
-        Tags: "green_circle",
+        Tags: "orange_circle",
       },
-      body: `${itemSummary}\n₱${total} · ${when}\n${address}${social ? `\n@${social}` : ""}${paymentRef ? `\nRef: ${paymentRef}` : ""}`,
+      body: `${itemSummary}\n₱${total} · ${when}\n${address}\n+63${phone}${social ? `\n${socialPlatform === "instagram" ? "IG" : "TT"}: @${social}` : ""}\nPayment pending`,
     }).catch(() => {});
   }
 
-  redirect(`/success?id=${orderId}`);
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+  const { sessionId, checkoutUrl } = await createCheckoutSession({
+    orderId,
+    items,
+    deliveryFee,
+    successUrl: `${appUrl}/success?id=${orderId}`,
+    cancelUrl: `${appUrl}/`,
+  });
+
+  await getSupabaseAdmin()
+    .from("orders")
+    .update({ paymongo_session_id: sessionId })
+    .eq("id", orderId);
+
+  redirect(checkoutUrl);
 }

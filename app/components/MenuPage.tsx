@@ -10,6 +10,35 @@ type OverlayStep = "cart" | "form";
 
 const CATEGORIES: Category[] = ["All", "Matcha", "Hojicha"];
 
+const PROMO_END = new Date("2026-08-21T04:00:00Z"); // noon PHT Aug 21
+
+// Ordering hours: 10 AM–2 PM and 7–9 PM PHT
+function getPHTHour() {
+  return (new Date().getUTCHours() + 8) % 24;
+}
+function checkOrderingOpen() {
+  const h = getPHTHour();
+  return (h >= 10 && h < 14) || (h >= 19 && h < 21);
+}
+function nextOpeningTime() {
+  const h = getPHTHour();
+  if (h < 10) return "10:00 AM";
+  if (h < 19) return "7:00 PM";
+  return "10:00 AM tomorrow";
+}
+
+function useCountdown(end: Date) {
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, end.getTime() - Date.now()));
+  useEffect(() => {
+    const id = setInterval(() => setTimeLeft(Math.max(0, end.getTime() - Date.now())), 1000);
+    return () => clearInterval(id);
+  }, [end]);
+  const h = Math.floor(timeLeft / 3_600_000);
+  const m = Math.floor((timeLeft % 3_600_000) / 60_000);
+  const s = Math.floor((timeLeft % 60_000) / 1000);
+  return { expired: timeLeft === 0, h, m, s };
+}
+
 const PASIG_BARANGAYS = [
   "Bagong Ilog", "Bagong Katipunan", "Bambang", "Buting", "Caniogan",
   "Dela Paz", "Kalawaan", "Kapasigan", "Kapitolyo", "Malinao", "Manggahan",
@@ -42,12 +71,25 @@ export function MenuPage() {
     deliveryType: "now" as "now" | "scheduled",
     deliveryDate: "",
     deliveryTime: "",
-    paymentRef: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [deliveryFee, setDeliveryFee] = useState<number | null | "loading" | "failed">(null);
   const [slots, setSlots] = useState<{ available: boolean; remaining: number } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const countdown = useCountdown(PROMO_END);
+  const [orderingOpen, setOrderingOpen] = useState(checkOrderingOpen);
+
+  useEffect(() => {
+    const id = setInterval(() => setOrderingOpen(checkOrderingOpen()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!orderingOpen && form.deliveryType === "now") {
+      setForm((f) => ({ ...f, deliveryType: "scheduled" }));
+    }
+  }, [orderingOpen]);
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -57,7 +99,6 @@ export function MenuPage() {
     if (!form.street.trim()) e.street = "Street address is required";
     if (!form.barangay) e.barangay = "Please select your barangay";
     if (!form.social.trim()) e.social = "Social handle is required";
-    if (!form.paymentRef.trim()) e.paymentRef = "Payment reference is required";
     if (form.deliveryType === "scheduled") {
       if (!form.deliveryDate) e.deliveryDate = "Please select a date";
       if (!form.deliveryTime) e.deliveryTime = "Please select a time";
@@ -117,21 +158,32 @@ export function MenuPage() {
 
   const handlePlaceOrder = () => {
     if (!validate()) return;
+    setFormError(null);
     startTransition(async () => {
-      const fd = new FormData();
-      fd.append("name", form.name.trim());
-      fd.append("phone", form.phone.trim());
-      fd.append("address", `${form.street.trim()}, ${form.barangay}, Pasig City`);
-      fd.append("social", form.social.trim());
-      fd.append("socialPlatform", form.socialPlatform);
-      fd.append("deliveryType", form.deliveryType);
-      fd.append("deliveryDate", form.deliveryDate);
-      fd.append("deliveryTime", form.deliveryTime);
-      fd.append("paymentRef", form.paymentRef);
-      fd.append("deliveryFee", String(typeof deliveryFee === "number" ? deliveryFee : 0));
-      fd.append("items", JSON.stringify(cart));
-      fd.append("total", String(total));
-      await submitOrder(fd);
+      try {
+        const fd = new FormData();
+        fd.append("name", form.name.trim());
+        fd.append("phone", form.phone.trim());
+        fd.append("address", `${form.street.trim()}, ${form.barangay}, Pasig City`);
+        fd.append("social", form.social.trim());
+        fd.append("socialPlatform", form.socialPlatform);
+        fd.append("deliveryType", form.deliveryType);
+        fd.append("deliveryDate", form.deliveryDate);
+        fd.append("deliveryTime", form.deliveryTime);
+        fd.append("deliveryFee", String(typeof deliveryFee === "number" ? deliveryFee : 0));
+        fd.append("items", JSON.stringify(cart));
+        fd.append("total", String(total));
+        await submitOrder(fd);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("OUTSIDE_ORDERING_HOURS")) {
+          setFormError("We're only accepting immediate orders 10 AM–2 PM and 7–9 PM. Please schedule your order instead.");
+        } else if (msg.includes("ORDERS_FULL")) {
+          setFormError("All order slots for today are full. Please try again tomorrow.");
+        } else if (!msg.includes("NEXT_REDIRECT")) {
+          setFormError("Something went wrong. Please try again.");
+        }
+      }
     });
   };
 
@@ -202,34 +254,49 @@ export function MenuPage() {
         <p style={{ fontSize: "0.75rem", color: muted, margin: 0, letterSpacing: "0.01em" }}>
           All drinks are <strong>12 oz</strong> · Made with <strong>oat milk</strong> by default
         </p>
+        <p style={{ fontSize: "0.72rem", color: muted, margin: "0.25rem 0 0", letterSpacing: "0.01em" }}>
+          Orders: <strong>10 AM–2 PM</strong> &amp; <strong>7–9 PM</strong> daily
+        </p>
       </div>
 
       {/* ── LAUNCH PROMO ── */}
-      <div
-        style={{
-          margin: "1rem 1rem 0",
-          padding: "0.875rem 1.125rem",
-          backgroundColor: brown,
-          borderRadius: "0.875rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-        }}
-      >
-        <div style={{ flexShrink: 0 }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-          </svg>
-        </div>
-        <div>
-          <div style={{ color: cream, fontWeight: 700, fontSize: "0.875rem" }}>
-            Launch Special — All drinks ₱180
+      {!countdown.expired && (
+        <div
+          style={{
+            margin: "1rem 1rem 0",
+            padding: "0.875rem 1.125rem",
+            backgroundColor: brown,
+            borderRadius: "0.875rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div style={{ flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EDE8D5" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <div style={{ color: cream, fontWeight: 700, fontSize: "0.875rem" }}>
+              Launch Special — All drinks ₱180
+            </div>
           </div>
-          <div style={{ color: "rgba(237,232,213,0.65)", fontSize: "0.75rem", marginTop: "0.125rem" }}>
-            Aug 17–18 only
+          <div
+            style={{
+              color: cream,
+              fontWeight: 700,
+              fontSize: "0.9375rem",
+              letterSpacing: "0.04em",
+              fontVariantNumeric: "tabular-nums",
+              flexShrink: 0,
+            }}
+          >
+            {String(countdown.h).padStart(2, "0")}:{String(countdown.m).padStart(2, "0")}:{String(countdown.s).padStart(2, "0")}
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── MENU GRID ── */}
       <div
@@ -861,39 +928,57 @@ export function MenuPage() {
                     >
                       Delivery Time *
                     </label>
-                    <div
-                      style={{
-                        display: "flex",
-                        backgroundColor: creamDark,
+
+                    {!orderingOpen && (
+                      <div style={{
+                        backgroundColor: "#FEF3C7",
+                        border: "1.5px solid #D97706",
                         borderRadius: "0.75rem",
-                        padding: "0.25rem",
-                        gap: "0.25rem",
+                        padding: "0.75rem 1rem",
                         marginBottom: "0.75rem",
-                      }}
-                    >
-                      {(["now", "scheduled"] as const).map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          onClick={() => setForm((f) => ({ ...f, deliveryType: opt }))}
-                          style={{
-                            flex: 1,
-                            padding: "0.625rem",
-                            borderRadius: "0.5rem",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: "0.875rem",
-                            fontWeight: 600,
-                            backgroundColor: form.deliveryType === opt ? brown : "transparent",
-                            color: form.deliveryType === opt ? cream : brownMid,
-                            transition: "all 0.15s ease",
-                            textTransform: "capitalize",
-                          }}
-                        >
-                          {opt === "now" ? "Now" : "Schedule"}
-                        </button>
-                      ))}
-                    </div>
+                        fontSize: "0.8125rem",
+                        color: "#92400E",
+                        lineHeight: 1.5,
+                      }}>
+                        We&apos;re not taking immediate orders right now. Opens at <strong>{nextOpeningTime()}</strong>. Please schedule your order below.
+                      </div>
+                    )}
+
+                    {orderingOpen && (
+                      <div
+                        style={{
+                          display: "flex",
+                          backgroundColor: creamDark,
+                          borderRadius: "0.75rem",
+                          padding: "0.25rem",
+                          gap: "0.25rem",
+                          marginBottom: "0.75rem",
+                        }}
+                      >
+                        {(["now", "scheduled"] as const).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, deliveryType: opt }))}
+                            style={{
+                              flex: 1,
+                              padding: "0.625rem",
+                              borderRadius: "0.5rem",
+                              border: "none",
+                              cursor: "pointer",
+                              fontSize: "0.875rem",
+                              fontWeight: 600,
+                              backgroundColor: form.deliveryType === opt ? brown : "transparent",
+                              color: form.deliveryType === opt ? cream : brownMid,
+                              transition: "all 0.15s ease",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {opt === "now" ? "Now" : "Schedule"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
                     {form.deliveryType === "scheduled" && (
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
@@ -918,7 +1003,7 @@ export function MenuPage() {
                               setForm((f) => ({ ...f, deliveryTime: v }));
                               if (errors.deliveryTime) setErrors((er) => ({ ...er, deliveryTime: "" }));
                             }}
-                            options={["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"]}
+                            options={["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "7:00 PM", "8:00 PM", "9:00 PM"]}
                             placeholder="Select a time"
                             hasError={!!errors.deliveryTime}
                           />
@@ -990,45 +1075,42 @@ export function MenuPage() {
                   </div>
                 </div>
 
-                {/* Payment QR */}
+                {/* Payment note */}
                 <div
                   style={{
                     backgroundColor: creamLight,
                     border: `1.5px solid ${creamDark}`,
                     borderRadius: "0.875rem",
-                    padding: "1.125rem",
-                    textAlign: "center",
+                    padding: "1rem 1.125rem",
                     marginBottom: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem",
                   }}
                 >
-                  <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: muted, marginBottom: "0.875rem" }}>
-                    Payment
-                  </div>
-                  <img
-                    src="/qr.jpg"
-                    alt="InstaPay QR"
-                    style={{ width: "100%", maxWidth: "280px", height: "auto", borderRadius: "0.75rem", margin: "0 auto 0.75rem", display: "block" }}
-                  />
-                  <p style={{ fontSize: "0.75rem", color: muted, margin: 0 }}>
-                    Scan to pay before your order is confirmed
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={olive} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                  <p style={{ fontSize: "0.8125rem", color: brownMid, margin: 0, lineHeight: 1.5 }}>
+                    You&apos;ll be redirected to <strong>PayMongo</strong> to pay securely via GCash, Maya, or card.
                   </p>
-                  <div style={{ marginTop: "0.875rem" }}>
-                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: muted, marginBottom: "0.375rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      Payment Reference *
-                    </label>
-                    <input
-                      type="text"
-                      value={form.paymentRef}
-                      onChange={(e) => {
-                        setForm((f) => ({ ...f, paymentRef: e.target.value }));
-                        if (errors.paymentRef) setErrors((er) => ({ ...er, paymentRef: "" }));
-                      }}
-                      placeholder="Last 4 digits or transaction ref"
-                      style={{ width: "100%", padding: "0.75rem 1rem", border: `1.5px solid ${errors.paymentRef ? "#c0392b" : creamDark}`, borderRadius: "0.75rem", fontSize: "0.875rem", backgroundColor: cream, color: brown, boxSizing: "border-box" }}
-                    />
-                    {errors.paymentRef && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.paymentRef}</p>}
-                  </div>
                 </div>
+
+                {formError && (
+                  <div style={{
+                    backgroundColor: "#FEE2E2",
+                    border: "1.5px solid #F87171",
+                    borderRadius: "0.875rem",
+                    padding: "0.875rem 1rem",
+                    marginBottom: "1rem",
+                    fontSize: "0.8125rem",
+                    color: "#991B1B",
+                    lineHeight: 1.5,
+                  }}>
+                    {formError}
+                  </div>
+                )}
 
                 <button
                   onClick={handlePlaceOrder}
@@ -1046,7 +1128,7 @@ export function MenuPage() {
                     transition: "background-color 0.15s ease",
                   }}
                 >
-                  {isPending ? "Placing order…" : "Place Order"}
+                  {isPending ? "Redirecting to payment…" : "Pay now →"}
                 </button>
               </>
             )}
