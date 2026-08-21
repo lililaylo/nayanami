@@ -1089,11 +1089,11 @@ export function MenuPage() {
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={olive} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                    <line x1="1" y1="10" x2="23" y2="10"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
                   </svg>
                   <p style={{ fontSize: "0.8125rem", color: brownMid, margin: 0, lineHeight: 1.5 }}>
-                    You&apos;ll be redirected to <strong>PayMongo</strong> to pay securely via GCash, Maya, or card.
+                    After placing your order you&apos;ll see a <strong>QR code</strong> to pay, then message us on IG with your proof of payment.
                   </p>
                 </div>
 
@@ -1128,7 +1128,7 @@ export function MenuPage() {
                     transition: "background-color 0.15s ease",
                   }}
                 >
-                  {isPending ? "Redirecting to payment…" : "Pay now →"}
+                  {isPending ? "Placing order…" : "Place order →"}
                 </button>
               </>
             )}

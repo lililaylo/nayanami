@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
 import { getDeliveryFeeForBarangay } from "@/lib/lalamove";
-import { createCheckoutSession } from "@/lib/paymongo";
 
 const ORDER_LIMIT = 10;
 
@@ -96,26 +95,9 @@ export async function submitOrder(formData: FormData) {
         Priority: "high",
         Tags: "orange_circle",
       },
-      body: `${itemSummary}\n₱${total} · ${when}\n${address}\n+63${phone}${social ? `\n${socialPlatform === "instagram" ? "IG" : "TT"}: @${social}` : ""}\nPayment pending`,
+      body: `${itemSummary}\n₱${total} · ${when}\n${address}\n+63${phone}${social ? `\n${socialPlatform === "instagram" ? "IG" : "TT"}: @${social}` : ""}`,
     }).catch(() => {});
   }
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-
-  const { sessionId, checkoutUrl } = await createCheckoutSession({
-    orderId,
-    items,
-    deliveryFee,
-    successUrl: `${appUrl}/success?id=${orderId}`,
-    cancelUrl: `${appUrl}/`,
-  });
-
-  await getSupabaseAdmin()
-    .from("orders")
-    .update({ paymongo_session_id: sessionId })
-    .eq("id", orderId);
-
-  redirect(checkoutUrl);
+  redirect(`/success?id=${orderId}`);
 }

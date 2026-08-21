@@ -4,9 +4,16 @@ create table orders (
   customer_name text not null,
   phone text not null,
   address text not null,
+  social text,
+  delivery_type text not null default 'now' check (delivery_type in ('now', 'scheduled')),
+  delivery_date text,
+  delivery_time text,
   items jsonb not null,
   total integer not null,
-  status text default 'pending' check (status in ('pending', 'confirmed', 'fulfilled', 'cancelled'))
+  delivery_fee integer,
+  status text default 'pending' check (status in ('pending', 'confirmed', 'fulfilled', 'cancelled')),
+  payment_status text default 'unpaid' check (payment_status in ('unpaid', 'paid', 'failed')),
+  paymongo_session_id text
 );
 
 alter table orders enable row level security;

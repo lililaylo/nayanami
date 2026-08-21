@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getSupabaseAdmin, type Order } from "@/lib/supabase";
 
+const IG_HANDLE = "nayanami.ph";
+
 export default async function SuccessPage({
   searchParams,
 }: {
@@ -44,8 +46,8 @@ export default async function SuccessPage({
       }}
     >
       <div style={{ maxWidth: "480px", margin: "0 auto", width: "100%" }}>
-        {/* Success icon + heading */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
           <img src="/logo.png" alt="Nayanami" style={{ height: "48px", width: "auto", margin: "0 auto 1.25rem", display: "block" }} />
           <div
             style={{
@@ -74,7 +76,7 @@ export default async function SuccessPage({
             Order placed!
           </h1>
           <p style={{ color: muted, fontSize: "0.9375rem", margin: 0 }}>
-            We&apos;ll reach out to confirm your order shortly.
+            Complete your payment below to confirm your order.
           </p>
         </div>
 
@@ -97,6 +99,100 @@ export default async function SuccessPage({
           </div>
         </div>
 
+        {/* QR Payment card */}
+        <div
+          style={{
+            backgroundColor: creamLight,
+            border: `2px solid ${creamDark}`,
+            borderRadius: "1rem",
+            padding: "1.5rem 1.25rem",
+            marginBottom: "1.25rem",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.6875rem",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: muted,
+              marginBottom: "1rem",
+            }}
+          >
+            Scan to Pay
+          </div>
+
+          <img
+            src="/qr.jpg"
+            alt="Payment QR code"
+            style={{
+              width: "100%",
+              maxWidth: "220px",
+              height: "auto",
+              borderRadius: "0.75rem",
+              display: "block",
+              margin: "0 auto 1.25rem",
+              border: `1px solid ${creamDark}`,
+            }}
+          />
+
+          <div
+            style={{
+              fontSize: "0.875rem",
+              fontWeight: 700,
+              color: brown,
+              marginBottom: "0.25rem",
+            }}
+          >
+            ₱{order.total.toLocaleString()}
+          </div>
+          <div style={{ fontSize: "0.75rem", color: muted }}>
+            GCash · Maya · InstaPay
+          </div>
+        </div>
+
+        {/* IG reminder */}
+        <div
+          style={{
+            backgroundColor: "#FDF2F8",
+            border: "2px solid #F0ABDC",
+            borderRadius: "1rem",
+            padding: "1.25rem",
+            marginBottom: "1.25rem",
+            display: "flex",
+            gap: "0.875rem",
+            alignItems: "flex-start",
+          }}
+        >
+          {/* IG icon */}
+          <div style={{ flexShrink: 0, marginTop: "0.125rem" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C026D3" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="#C026D3" stroke="none"/>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.875rem", fontWeight: 700, color: "#86198F", marginBottom: "0.375rem" }}>
+              Message us on Instagram to confirm
+            </div>
+            <div style={{ fontSize: "0.8125rem", color: "#9D174D", lineHeight: 1.6 }}>
+              DM{" "}
+              <a
+                href={`https://instagram.com/${IG_HANDLE}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontWeight: 700, color: "#86198F" }}
+              >
+                @{IG_HANDLE}
+              </a>{" "}
+              with your <strong>screenshot of payment</strong> and your order ID{" "}
+              <strong style={{ fontFamily: "monospace" }}>{order.id}</strong>.
+            </div>
+          </div>
+        </div>
+
         {/* Delivery details */}
         <div
           style={{
@@ -111,7 +207,7 @@ export default async function SuccessPage({
           <Row label="Name" value={order.customer_name} />
           <Row label="Phone" value={order.phone} />
           <Row label="Address" value={order.address} />
-          {order.social && <Row label="Social" value={`@${order.social}`} />}
+          {order.social && <Row label="Social" value={`@${order.social.split(":")[1] ?? order.social}`} />}
           <Row
             label="Delivery"
             value={
@@ -164,27 +260,6 @@ export default async function SuccessPage({
             <span>Total</span>
             <span style={{ color: olive }}>₱{order.total.toLocaleString()}</span>
           </div>
-          <div style={{ marginTop: "0.375rem", fontSize: "0.75rem", color: muted, textAlign: "right" }}>
-            Payment via QR
-          </div>
-        </div>
-
-        {/* Payment QR */}
-        <div
-          style={{
-            backgroundColor: creamLight,
-            border: `1px solid ${creamDark}`,
-            borderRadius: "0.875rem",
-            padding: "1.25rem",
-            textAlign: "center",
-            marginBottom: "1.25rem",
-          }}
-        >
-          <div style={{ fontSize: "0.6875rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: muted, marginBottom: "0.875rem" }}>
-            Payment
-          </div>
-          <img src="/qr.jpg" alt="InstaPay QR" style={{ width: "180px", height: "180px", objectFit: "cover", borderRadius: "0.75rem", margin: "0 auto 0.875rem", display: "block" }} />
-          <p style={{ fontSize: "0.75rem", color: muted, margin: 0 }}>Send your payment receipt to confirm your order</p>
         </div>
 
         <Link

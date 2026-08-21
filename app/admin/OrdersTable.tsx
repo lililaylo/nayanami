@@ -245,7 +245,7 @@ function OrderCard({
         <Info label="Name" value={order.customer_name} />
         <Info label="Phone" value={order.phone} />
         <Info label="Address" value={order.address} />
-        {order.payment_ref && <Info label="Ref #" value={order.payment_ref} />}
+        {order.paymongo_session_id && <Info label="PayMongo" value={order.paymongo_session_id} />}
         {order.social && <Info label="Social" value={`@${order.social}`} />}
         <Info
           label="Delivery"
