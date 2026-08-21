@@ -90,12 +90,11 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
     <div>
       {/* Filter tabs */}
       <div
+        className="scroll-x"
         style={{
           display: "flex",
           gap: "0.375rem",
           marginBottom: "1rem",
-          overflowX: "auto",
-          scrollbarWidth: "none",
           paddingBottom: "2px",
         }}
       >
@@ -300,17 +299,16 @@ function OrderCard({
         border: `2px solid ${selected ? brown : isPaid ? "#86EFAC" : creamDark}`,
         borderRadius: "1rem",
         overflow: "hidden",
-        transition: "border-color 0.15s ease",
         opacity: isPending ? 0.6 : 1,
       }}
     >
-      {/* Card header */}
+      {/* Header row: checkbox + ID/time + badges */}
       <div
         style={{
-          padding: "0.875rem 1rem",
+          padding: "0.75rem 0.875rem",
           display: "flex",
           alignItems: "center",
-          gap: "0.75rem",
+          gap: "0.625rem",
           borderBottom: `1px solid ${creamDark}`,
           backgroundColor: selected ? "#FDF8F0" : creamLight,
         }}
@@ -322,92 +320,53 @@ function OrderCard({
           style={{ width: "1.125rem", height: "1.125rem", accentColor: brown, cursor: "pointer", flexShrink: 0 }}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: "0.9375rem", fontFamily: "monospace", letterSpacing: "0.02em" }}>
-            {order.id}
-          </div>
-          <div style={{ fontSize: "0.75rem", color: muted, marginTop: "0.125rem" }}>{date}</div>
+          <div style={{ fontWeight: 700, fontSize: "0.875rem", fontFamily: "monospace" }}>{order.id}</div>
+          <div style={{ fontSize: "0.7rem", color: muted, marginTop: "0.1rem" }}>{date}</div>
         </div>
-        {/* Status badges */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem", flexShrink: 0 }}>
-          <span
-            style={{
-              fontSize: "0.6875rem",
-              fontWeight: 700,
-              textTransform: "capitalize",
-              padding: "0.2rem 0.625rem",
-              borderRadius: "9999px",
-              backgroundColor: badge.bg,
-              color: badge.color,
-            }}
-          >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.2rem", flexShrink: 0 }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "capitalize", padding: "0.15rem 0.55rem", borderRadius: "9999px", backgroundColor: badge.bg, color: badge.color }}>
             {order.status}
           </span>
-          <span
-            style={{
-              fontSize: "0.6875rem",
-              fontWeight: 700,
-              padding: "0.2rem 0.625rem",
-              borderRadius: "9999px",
-              backgroundColor: isPaid ? "#D1FAE5" : "#FEF3C7",
-              color: isPaid ? "#065F46" : "#92400E",
-            }}
-          >
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "0.15rem 0.55rem", borderRadius: "9999px", backgroundColor: isPaid ? "#D1FAE5" : "#FEF3C7", color: isPaid ? "#065F46" : "#92400E" }}>
             {isPaid ? "paid" : "unpaid"}
           </span>
         </div>
       </div>
 
-      {/* Customer info */}
-      <div style={{ padding: "0.875rem 1rem", borderBottom: `1px solid ${creamDark}` }}>
-        <InfoRow icon="👤" value={order.customer_name} bold />
-        <InfoRow icon="📱" value={order.phone} />
-        <InfoRow icon="📍" value={order.address} />
-        {socialDisplay && <InfoRow icon="💬" value={socialDisplay} />}
-        <InfoRow icon="🕐" value={deliveryLabel} />
-      </div>
+      {/* Body: customer + items in two columns on wide, stacked on narrow */}
+      <div style={{ padding: "0.75rem 0.875rem", borderBottom: `1px solid ${creamDark}` }}>
+        {/* Customer info */}
+        <div style={{ marginBottom: "0.625rem" }}>
+          <div style={{ fontWeight: 700, fontSize: "0.9rem", marginBottom: "0.25rem" }}>{order.customer_name}</div>
+          <div style={{ fontSize: "0.8125rem", color: brownMid, marginBottom: "0.15rem" }}>{order.phone}</div>
+          <div style={{ fontSize: "0.8125rem", color: brownMid, marginBottom: "0.15rem" }}>{order.address}</div>
+          {socialDisplay && <div style={{ fontSize: "0.8125rem", color: muted }}>{socialDisplay}</div>}
+          <div style={{ fontSize: "0.8125rem", color: muted, marginTop: "0.2rem" }}>🕐 {deliveryLabel}</div>
+        </div>
 
-      {/* Items */}
-      <div style={{ padding: "0.875rem 1rem", borderBottom: `1px solid ${creamDark}` }}>
-        {order.items.map((item) => (
-          <div
-            key={item.id}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.875rem",
-              marginBottom: "0.3rem",
-              gap: "0.5rem",
-            }}
-          >
-            <span style={{ color: brownMid }}>{item.quantity}× {item.name}</span>
-            <span style={{ fontWeight: 600, flexShrink: 0 }}>₱{(item.price * item.quantity).toLocaleString()}</span>
+        {/* Items */}
+        <div style={{ borderTop: `1px solid ${creamDark}`, paddingTop: "0.5rem" }}>
+          {order.items.map((item) => (
+            <div key={item.id} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem", marginBottom: "0.2rem", gap: "0.5rem" }}>
+              <span style={{ color: brownMid }}>{item.quantity}× {item.name}</span>
+              <span style={{ fontWeight: 600, flexShrink: 0 }}>₱{(item.price * item.quantity).toLocaleString()}</span>
+            </div>
+          ))}
+          {order.delivery_fee != null && order.delivery_fee > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8125rem", color: muted, marginBottom: "0.2rem" }}>
+              <span>Delivery</span>
+              <span>₱{order.delivery_fee.toLocaleString()}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: "0.9375rem", marginTop: "0.375rem", paddingTop: "0.375rem", borderTop: `1px solid ${creamDark}` }}>
+            <span>Total</span>
+            <span style={{ color: olive }}>₱{order.total.toLocaleString()}</span>
           </div>
-        ))}
-        {order.delivery_fee != null && order.delivery_fee > 0 && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.875rem", marginBottom: "0.3rem", color: muted }}>
-            <span>Delivery fee</span>
-            <span>₱{order.delivery_fee.toLocaleString()}</span>
-          </div>
-        )}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontWeight: 700,
-            fontSize: "1rem",
-            marginTop: "0.5rem",
-            paddingTop: "0.5rem",
-            borderTop: `1px solid ${creamDark}`,
-          }}
-        >
-          <span>Total</span>
-          <span style={{ color: olive }}>₱{order.total.toLocaleString()}</span>
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ padding: "0.875rem 1rem", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
-        {/* Mark Paid — only shown when unpaid */}
+      <div style={{ padding: "0.75rem 0.875rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {!isPaid && (
           <button
             onClick={handleMarkPaid}
@@ -415,12 +374,12 @@ function OrderCard({
             style={{
               width: "100%",
               padding: "0.875rem",
-              minHeight: "48px",
+              minHeight: "52px",
               borderRadius: "0.75rem",
               border: "none",
               backgroundColor: "#16A34A",
               color: "#fff",
-              fontSize: "0.9375rem",
+              fontSize: "1rem",
               fontWeight: 700,
               cursor: isPending ? "not-allowed" : "pointer",
               opacity: isPending ? 0.6 : 1,
@@ -437,8 +396,7 @@ function OrderCard({
           </button>
         )}
 
-        {/* Status buttons */}
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {(["pending", "confirmed", "fulfilled", "cancelled"] as const)
             .filter((s) => s !== order.status)
             .map((s) => (
@@ -450,7 +408,7 @@ function OrderCard({
                   fontSize: "0.8125rem",
                   fontWeight: 600,
                   padding: "0.5rem 0.875rem",
-                  minHeight: "40px",
+                  minHeight: "44px",
                   borderRadius: "9999px",
                   border: `1.5px solid ${creamDark}`,
                   backgroundColor: "transparent",
@@ -471,7 +429,7 @@ function OrderCard({
               fontSize: "0.8125rem",
               fontWeight: 600,
               padding: "0.5rem 0.875rem",
-              minHeight: "40px",
+              minHeight: "44px",
               borderRadius: "9999px",
               border: "1.5px solid #FCA5A5",
               backgroundColor: "transparent",
@@ -488,13 +446,3 @@ function OrderCard({
   );
 }
 
-function InfoRow({ icon, value, bold }: { icon: string; value: string; bold?: boolean }) {
-  return (
-    <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.875rem", marginBottom: "0.375rem", alignItems: "flex-start" }}>
-      <span style={{ flexShrink: 0, lineHeight: 1.5 }}>{icon}</span>
-      <span style={{ fontWeight: bold ? 700 : 400, color: bold ? brown : brownMid, lineHeight: 1.5, wordBreak: "break-word" }}>
-        {value}
-      </span>
-    </div>
-  );
-}

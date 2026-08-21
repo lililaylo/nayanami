@@ -1,0 +1,17 @@
+{
+  "name": "Nayanami Admin",
+  "short_name": "Nayanami",
+  "start_url": "/admin",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#EDE8D5",
+  "theme_color": "#3D1A08",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

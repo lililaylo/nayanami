@@ -29,86 +29,65 @@ export default async function AdminPage() {
     <div
       style={{
         backgroundColor: cream,
-        minHeight: "100vh",
+        minHeight: "100dvh",
         color: brown,
         fontFamily: "var(--font-dm-sans, system-ui)",
       }}
     >
-      {/* Header */}
+      {/* Sticky header — respects Dynamic Island / notch */}
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 10,
           backgroundColor: cream,
-          padding: "0.875rem 1rem",
           borderBottom: `1px solid ${creamDark}`,
+          paddingTop: "calc(0.75rem + env(safe-area-inset-top))",
+          paddingBottom: "0.75rem",
+          paddingLeft: "calc(1rem + env(safe-area-inset-left))",
+          paddingRight: "calc(1rem + env(safe-area-inset-right))",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "0.75rem",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
-          <img src="/logo.png" alt="Nayanami" style={{ height: "32px", width: "auto" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <img src="/logo.png" alt="Nayanami" style={{ height: "30px", width: "auto" }} />
           <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
             {unpaid > 0 && (
-              <span
-                style={{
-                  backgroundColor: "#FEF3C7",
-                  color: "#92400E",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  padding: "0.25rem 0.625rem",
-                  borderRadius: "9999px",
-                  border: "1.5px solid #FDE68A",
-                }}
-              >
+              <span style={{ backgroundColor: "#FEF3C7", color: "#92400E", fontSize: "0.6875rem", fontWeight: 700, padding: "0.2rem 0.55rem", borderRadius: "9999px", border: "1.5px solid #FDE68A" }}>
                 {unpaid} unpaid
               </span>
             )}
             {pending > 0 && (
-              <span
-                style={{
-                  backgroundColor: olive,
-                  color: "#fff",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  padding: "0.25rem 0.625rem",
-                  borderRadius: "9999px",
-                }}
-              >
-                {pending} pending
+              <span style={{ backgroundColor: olive, color: "#fff", fontSize: "0.6875rem", fontWeight: 700, padding: "0.2rem 0.55rem", borderRadius: "9999px" }}>
+                {pending} new
               </span>
             )}
           </div>
         </div>
-        {/* Refresh link */}
         <a
           href="/admin"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "40px",
-            height: "40px",
-            borderRadius: "9999px",
-            border: `1.5px solid ${creamDark}`,
-            color: brown,
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "38px", height: "38px", borderRadius: "9999px", border: `1.5px solid ${creamDark}`, color: brown, textDecoration: "none", flexShrink: 0 }}
           aria-label="Refresh"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={brown} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={brown} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="23 4 23 10 17 10"/>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
         </a>
       </header>
 
-      {/* Orders */}
-      <main style={{ padding: "1rem" }}>
+      {/* Main content — respects home indicator */}
+      <main
+        style={{
+          padding: "0.875rem",
+          paddingLeft: "calc(0.875rem + env(safe-area-inset-left))",
+          paddingRight: "calc(0.875rem + env(safe-area-inset-right))",
+          paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+        }}
+      >
         {orders && orders.length > 0 ? (
           <OrdersTable orders={orders} />
         ) : (
@@ -120,7 +99,7 @@ export default async function AdminPage() {
               <line x1="10" y1="2" x2="10" y2="4" />
               <line x1="14" y1="2" x2="14" y2="4" />
             </svg>
-            <p>No orders yet. Share your link to get started!</p>
+            <p>No orders yet.</p>
           </div>
         )}
       </main>
