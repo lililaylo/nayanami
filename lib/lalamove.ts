@@ -43,6 +43,14 @@ const ALL_LOCATIONS: ServiceableLocation[] = [
   { barangay: "Santolan",         city: "Pasig City", lat: 14.5933, lng: 121.0789 },
   { barangay: "Sumilang",         city: "Pasig City", lat: 14.5700, lng: 121.0500 },
   { barangay: "Ugong",            city: "Pasig City", lat: 14.5833, lng: 121.0478 },
+  // Cainta, Rizal
+  { barangay: "Sto. Domingo",  city: "Cainta",  lat: 14.5656, lng: 121.1072 },
+  { barangay: "San Juan",      city: "Cainta",  lat: 14.5542, lng: 121.1097 },
+  { barangay: "San Andres",    city: "Cainta",  lat: 14.5725, lng: 121.1094 },
+  { barangay: "San Isidro",    city: "Cainta",  lat: 14.5597, lng: 121.1119 },
+  { barangay: "Sto. Nino",     city: "Cainta",  lat: 14.5817, lng: 121.1097 },
+  { barangay: "Santa Rosa",    city: "Cainta",  lat: 14.5636, lng: 121.1181 },
+  { barangay: "San Roque",     city: "Cainta",  lat: 14.5778, lng: 121.1144 },
   // Mandaluyong
   { barangay: "Addition Hills",        city: "Mandaluyong", lat: 14.5636, lng: 121.0453 },
   { barangay: "Bagong Silang",         city: "Mandaluyong", lat: 14.5761, lng: 121.0411 },
@@ -91,7 +99,10 @@ export const SERVICEABLE_LOCATIONS: ServiceableLocation[] = ALL_LOCATIONS.filter
   const km = haversineKm(PICKUP_LAT, PICKUP_LNG, loc.lat, loc.lng);
   return km <= MAX_DELIVERY_KM;
 }).sort((a, b) => {
-  if (a.city !== b.city) return a.city === "Pasig City" ? -1 : 1;
+  const cityOrder: Record<string, number> = { "Pasig City": 0, "Cainta": 1, "Mandaluyong": 2 };
+  const ca = cityOrder[a.city] ?? 99;
+  const cb = cityOrder[b.city] ?? 99;
+  if (ca !== cb) return ca - cb;
   return a.barangay.localeCompare(b.barangay);
 });
 
