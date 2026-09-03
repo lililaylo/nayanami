@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSupabase, getSupabaseAdmin } from "@/lib/supabase";
-import { getDeliveryFeeForBarangay } from "@/lib/lalamove";
+import { getDeliveryFeeForLocation, SERVICEABLE_LOCATIONS } from "@/lib/lalamove";
 
 const ORDER_LIMIT = 10;
 
@@ -15,8 +15,8 @@ function isWithinOrderingHours(): boolean {
   return (h >= 10 && h < 14) || (h >= 19 && h < 21);
 }
 
-export async function fetchDeliveryQuoteFromBarangay(barangay: string): Promise<number | null> {
-  return getDeliveryFeeForBarangay(barangay);
+export async function fetchDeliveryQuote(barangay: string, city: string): Promise<number | null> {
+  return getDeliveryFeeForLocation(barangay, city);
 }
 
 export async function checkOrderLimit(): Promise<{ available: boolean; remaining: number }> {
@@ -47,6 +47,8 @@ export async function submitOrder(formData: FormData) {
   const deliveryType = formData.get("deliveryType") as string;
   const deliveryDate = formData.get("deliveryDate") as string;
   const deliveryTime = formData.get("deliveryTime") as string;
+  const barangay = (formData.get("barangay") as string).trim();
+  const city = (formData.get("city") as string).trim();
   const deliveryFee = parseInt(formData.get("deliveryFee") as string) || 0;
   const items = JSON.parse(formData.get("items") as string);
   const itemsTotal = parseInt(formData.get("total") as string);
@@ -55,6 +57,11 @@ export async function submitOrder(formData: FormData) {
   if (!name || !phone || !address || !items?.length) {
     throw new Error("Missing required fields");
   }
+
+  const isServiceable = SERVICEABLE_LOCATIONS.some(
+    (l) => l.barangay === barangay && l.city === city
+  );
+  if (!isServiceable) throw new Error("OUTSIDE_DELIVERY_AREA");
 
   const limit = await checkOrderLimit();
   if (!limit.available) throw new Error("ORDERS_FULL");

@@ -2,7 +2,8 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { menuItems, type MenuItem } from "@/lib/menu";
-import { submitOrder, fetchDeliveryQuoteFromBarangay, checkOrderLimit } from "@/app/actions";
+import { SERVICEABLE_LOCATIONS } from "@/lib/lalamove";
+import { submitOrder, fetchDeliveryQuote, checkOrderLimit } from "@/app/actions";
 
 type CartItem = { id: string; name: string; price: number; quantity: number };
 type Category = "All" | "Matcha" | "Hojicha";
@@ -39,14 +40,10 @@ function useCountdown(end: Date) {
   return { expired: timeLeft === 0, h, m, s };
 }
 
-const PASIG_BARANGAYS = [
-  "Bagong Ilog", "Bagong Katipunan", "Bambang", "Buting", "Caniogan",
-  "Dela Paz", "Kalawaan", "Kapasigan", "Kapitolyo", "Malinao", "Manggahan",
-  "Maybunga", "Oranbo", "Palatiw", "Pinagbuhatan", "Pineda", "Rosario",
-  "Sagad", "San Antonio", "San Joaquin", "San Jose", "San Miguel",
-  "San Nicolas", "Santa Cruz", "Santa Lucia", "Santa Rosa", "Santo Tomas",
-  "Santolan", "Sumilang", "Ugong",
-];
+// Each entry is "Barangay" for Pasig, "Barangay, City" for other cities
+const LOCATION_OPTIONS = SERVICEABLE_LOCATIONS.map((l) =>
+  l.city === "Pasig City" ? l.barangay : `${l.barangay}, ${l.city}`
+);
 
 const cream = "#EDE8D5";
 const brown = "#3D1A08";
@@ -66,6 +63,7 @@ export function MenuPage() {
     phone: "",
     street: "",
     barangay: "",
+    city: "",
     socialPlatform: "instagram" as "instagram" | "tiktok",
     social: "",
     deliveryType: "now" as "now" | "scheduled",
@@ -108,12 +106,12 @@ export function MenuPage() {
   };
 
   useEffect(() => {
-    if (!form.barangay) { setDeliveryFee(null); return; }
+    if (!form.barangay || !form.city) { setDeliveryFee(null); return; }
     setDeliveryFee("loading");
-    fetchDeliveryQuoteFromBarangay(form.barangay).then((fee) => {
+    fetchDeliveryQuote(form.barangay, form.city).then((fee) => {
       setDeliveryFee(fee !== null ? fee : "failed");
     });
-  }, [form.barangay]);
+  }, [form.barangay, form.city]);
 
   const filtered =
     category === "All"
@@ -164,7 +162,9 @@ export function MenuPage() {
         const fd = new FormData();
         fd.append("name", form.name.trim());
         fd.append("phone", form.phone.trim());
-        fd.append("address", `${form.street.trim()}, ${form.barangay}, Pasig City`);
+        fd.append("address", `${form.street.trim()}, ${form.barangay}, ${form.city}`);
+        fd.append("barangay", form.barangay);
+        fd.append("city", form.city);
         fd.append("social", form.social.trim());
         fd.append("socialPlatform", form.socialPlatform);
         fd.append("deliveryType", form.deliveryType);
@@ -176,7 +176,9 @@ export function MenuPage() {
         await submitOrder(fd);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("OUTSIDE_ORDERING_HOURS")) {
+        if (msg.includes("OUTSIDE_DELIVERY_AREA")) {
+          setFormError("Sorry, your area is outside our 5km delivery range.");
+        } else if (msg.includes("OUTSIDE_ORDERING_HOURS")) {
           setFormError("We're only accepting immediate orders 10 AM–2 PM and 7–9 PM. Please schedule your order instead.");
         } else if (msg.includes("ORDERS_FULL")) {
           setFormError("All order slots for today are full. Please try again tomorrow.");
@@ -817,29 +819,34 @@ export function MenuPage() {
                     {errors.street && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.street}</p>}
                   </div>
 
-                  {/* Barangay */}
+                  {/* Barangay / Location */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>
                       Barangay *
                     </label>
                     <SearchableSelect
-                      value={form.barangay}
-                      onChange={(v) => {
-                        setForm((f) => ({ ...f, barangay: v }));
-                        if (errors.barangay) setErrors((er) => ({ ...er, barangay: "" }));
+                      value={form.barangay ? (form.city === "Pasig City" ? form.barangay : `${form.barangay}, ${form.city}`) : ""}
+                      onChange={(label) => {
+                        const loc = SERVICEABLE_LOCATIONS.find(
+                          (l) => (l.city === "Pasig City" ? l.barangay : `${l.barangay}, ${l.city}`) === label
+                        );
+                        if (loc) {
+                          setForm((f) => ({ ...f, barangay: loc.barangay, city: loc.city }));
+                          if (errors.barangay) setErrors((er) => ({ ...er, barangay: "" }));
+                        }
                       }}
-                      options={PASIG_BARANGAYS}
+                      options={LOCATION_OPTIONS}
                       placeholder="Select barangay"
                       hasError={!!errors.barangay}
                     />
                     {errors.barangay && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: "0.3rem" }}>{errors.barangay}</p>}
                   </div>
 
-                  {/* City — fixed */}
+                  {/* City — dynamic */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem", color: brownMid }}>City</label>
                     <div style={{ padding: "0.875rem 1rem", backgroundColor: creamDark, borderRadius: "0.75rem", fontSize: "0.9375rem", color: brownMid, fontWeight: 500 }}>
-                      Pasig City
+                      {form.city || "—"}
                     </div>
                   </div>
 
@@ -1395,7 +1402,7 @@ function SearchableSelect({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search barangay…"
+              placeholder="Search barangay or city…"
               style={{
                 width: "100%",
                 padding: "0.5rem 0.75rem",
